@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Quiz App</title>
+  <style>
+    body { font-family: Arial, sans-serif; }
+    .question { font-size: 24px; margin: 10px; }
+    .options { display: flex; }
+    .option { margin: 5px; cursor: pointer; padding: 5px; border: 1px solid #ccc; }
+    .selected { background-color: #aaa; }
+  </style>
+</head>
+<body>
+
+  <div id="quiz"></div>
+  <button onclick="calculateResult()">Submit</button>
+  <div id="result"></div>
+
+  <script>
+    let questions = [
+      {
+        question: 'What is 2+2?',
+        options: ['3', '4'],
+        correct: '4'
+      },
+      {
+        question: 'What is 3+2?',
+        options: ['4', '5'],
+        correct: '5'
+      }
+    ];
+
+    function displayQuestions() {
+      let quizHtml = '';
+      questions.forEach((q, index) => {
+        quizHtml += `<div class="question">${q.question}</div>`;
+        quizHtml += `<div class="options" id="question_${index}">`;
+        q.options.forEach(option => {
+          quizHtml += `<div class="option" onclick="selectOption(${index}, '${option}')">${option}</div>`;
+        });
+        quizHtml += '</div>';
+      });
+      document.getElementById('quiz').innerHTML = quizHtml;
+    }
+
+    let selectedAnswers = {};
+
+    function selectOption(questionIndex, selected) {
+      selectedAnswers[questionIndex] = selected;
+      let optionsDiv = document.getElementById(`question_${questionIndex}`);
+      Array.from(optionsDiv.children).forEach(child => {
+        child.classList.remove('selected');
+        if (child.textContent === selected) {
+          child.classList.add('selected');
+        }
+      });
+    }
+
+    function calculateResult() {
+      let correctCount = 0;
+      questions.forEach((q, index) => {
+        if (selectedAnswers[index] === q.correct) {
+          correctCount++;
+        }
+      });
+      let percentage = (correctCount / questions.length) * 100;
+      document.getElementById('result').innerText = `Your score is: ${correctCount}/${questions.length} (${percentage}%)`;
+    }
+
+    displayQuestions();
+  </script>
+</body>
+</html>

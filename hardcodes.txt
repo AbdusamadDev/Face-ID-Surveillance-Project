@@ -1,0 +1,19 @@
+# stream.py
+
+# ______________________________________________________________________________
+
+# filename = "../screenshots/%s_%s.jpg" % (result, str(datetime.now()))
+# ______________________________________________________________________________
+# context = {
+#     "id": details[0],
+#     "first_name": detected_face,
+#     "last_name": details[1],
+#     "age": details[2],
+#     "description": details[-1],
+#     "image": host_address + "/media/criminals/" + detected_face + "/main.jpg",
+#     "url": url,
+#     "camera": camera_details,
+# }
+# ______________________________________________________________________________
+# streamer = MainStream("../media", "http://192.168.1.142:5000/video")
+# ______________________________________________________________________________

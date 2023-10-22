@@ -1,0 +1,7 @@
+venv
+.vscode
+ai/faiss
+.idea
+api/__pycache__
+ai/__pycache__
+config/__pycache__

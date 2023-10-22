@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebSocket Client</title>
+    <script>
+        const websocket = new WebSocket("ws://localhost:5000/");
+        websocket.onmessage = (event) => {
+            const alertData = JSON.parse(event.data);
+            console.log("Received alert: ", alertData);
+        };
+    </script>
+</head>
+
+<body>
+</body>
+
+</html>
