@@ -1,23 +1,29 @@
-from django.http import FileResponse, JsonResponse
-from django.conf import settings
+# Django and Django Rest Framework imports
+from django.http import JsonResponse
 from rest_framework.response import Response
 from rest_framework.request import HttpRequest
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.views import APIView
 from rest_framework import status
 
-from api.utils import host_address
-from api.models import Camera, Criminals
-from api.serializers import CameraSerializer, CriminalsSerializer
+# Local apps imports
 from api.filters import CameraFilter, CriminalsFilter
+from api.models import Camera, Criminals, Encodings
 from api.pagination import CameraPagination, CriminalsPagination
+from api.serializers import CameraSerializer, CriminalsSerializer
+from api.utils import host_address, process_image, is_already_in
 
+# Standard libraries imports
 from math import ceil
+import numpy as np
 import os
 import time
+import cv2
 
 
 class CameraAPIView(ModelViewSet):
+    """Class for CRUD operation of Cmaera details"""
+
     model = Camera
     serializer_class = CameraSerializer
     queryset = Camera.objects.all().order_by("name")
@@ -27,6 +33,11 @@ class CameraAPIView(ModelViewSet):
 
 
 class CriminalsAPIView(ModelViewSet):
+    """
+    Class for CRUD operation of Criminals details
+    Added some AI functionality to validate the image
+    """
+
     model = Criminals
     serializer_class = CriminalsSerializer
     queryset = Criminals.objects.all()
@@ -34,8 +45,45 @@ class CriminalsAPIView(ModelViewSet):
     filterset_class = CriminalsFilter
     pagination_class = CriminalsPagination
 
+    def create(self, request, *args, **kwargs):
+        # Get serializers and prepare image for validation
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        first_name = serializer.validated_data.get("first_name")
+        image = serializer.validated_data.get("image")
+        nparr = np.frombuffer(image.read(), np.uint8)
+        img_np = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        encoding = process_image(img_np)
+        # Image validation goes here
+        if encoding is None:
+            return Response(
+                data={
+                    "msg": "No face found in entered image, djangoni jinni kurissilami"
+                },
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        elif len(encoding) != 1:
+            return Response(
+                data={"msg": "Only one face is allowed in one image!"},
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        else:
+            new_encoding = encoding[0].embedding
+            if is_already_in(new_encoding):
+                return Response(
+                    data={"msg": "This criminal is already in database!"},
+                    status=status.HTTP_409_CONFLICT,
+                )
+            else:
+                new_encoding = list(new_encoding)
+        Encodings.objects.create(criminal=first_name, encoding=encoding)
+        self.perform_create(serializer=serializer)
+        return Response({"ADsad": "ASDASDad"})
+
 
 class BaseScreenshotsAPIView(APIView):
+    """Base View for handling image files and returning File responses"""
+
     def get_path(self):
         raise NotImplementedError()
 
@@ -102,6 +150,8 @@ class SuspendedScreenshotsAPIView(BaseScreenshotsAPIView):
 
 
 class UnknownFacesImageView(APIView):
+    """Get all screenshots paths"""
+
     def get(self, request):
         directory = "./media/unknown_faces/"
         response_list = []

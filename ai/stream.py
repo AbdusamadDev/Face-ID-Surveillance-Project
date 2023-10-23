@@ -4,7 +4,7 @@ import cv2
 from datetime import datetime
 from imutils.video import VideoStream
 from train import FaceTrainer
-from models import get_details, get_camera
+from models import Database
 import asyncio
 import os
 import websockets
@@ -82,7 +82,9 @@ class AlertManager:
 
     def save_screenshot(self, detected_face, frame):
         year, month, day = datetime.now().timetuple()[:3]
-        path = f"../screenshots/{detected_face}/{year}/{month}/{day}"
+        path = (
+            f"{absolute_path}screenshots/criminals/{detected_face}/{year}/{month}/{day}"
+        )
         if not os.path.exists(path):
             os.makedirs(path)
         filename = (
@@ -93,8 +95,9 @@ class AlertManager:
 
     # Modify send_alert method in AlertManager class
     async def send_alert(self, detected_face, url):
-        details = get_details(detected_face)
-        camera = get_camera(url)
+        database = Database()
+        details = database.get_details(detected_face)
+        camera = database.get_camera(url)
         camera_details = camera or None
 
         context = {

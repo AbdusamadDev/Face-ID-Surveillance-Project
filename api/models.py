@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 
 
 class Camera(models.Model):
@@ -23,3 +24,8 @@ class Criminals(models.Model):
 
     class Meta:
         indexes = [models.Index(fields=["first_name", "last_name", "age"])]
+
+class Encodings(models.Model):
+    criminal = models.CharField(max_length=150)
+    encoding = ArrayField(models.FloatField())
+    

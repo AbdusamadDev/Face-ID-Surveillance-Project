@@ -1,8 +1,8 @@
-import os
-import cv2
-import numpy as np
 import torch
 import insightface
+import cv2
+import os
+import numpy as np
 import faiss
 
 
@@ -43,3 +43,7 @@ class FaceTrainer:
         index = faiss.IndexFlatL2(known_face_encodings.shape[1])
         index.add(known_face_encodings)
         return index, known_face_names
+
+    @property
+    def get_face_model(self):
+        return self.face_model

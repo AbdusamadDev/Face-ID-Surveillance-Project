@@ -49,7 +49,8 @@ class CriminalsSerializer(serializers.ModelSerializer):
 
         if image:
             file_storage = FileSystemStorage()
-            path = os.path.join("media", validated_data["first_name"], "main.jpg")
+            path = os.path.join("criminals", validated_data["first_name"], "main.jpg")
+
             file_storage.save(path, image)
 
         instance = super(CriminalsSerializer, self).create(validated_data)
