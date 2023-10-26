@@ -144,7 +144,6 @@ class MainStream:
         cap = VideoStream(url).start()
         try:
             while True:
-                if datetime.now() - last_time
                 frame = cap.read()
                 if frame is None:
                     continue
@@ -176,7 +175,7 @@ async def websocket_server(websocket, path):
 
 
 if __name__ == "__main__":
-    camera_urls = ["http://192.168.1.137:4747/video"]
+    camera_urls = ["http://192.168.1.142:5000/video"]
     stream = MainStream(absolute_path + "/criminals/", camera_urls)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(websockets.serve(websocket_server, "0.0.0.0", 5000))

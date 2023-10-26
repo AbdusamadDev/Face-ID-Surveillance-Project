@@ -11,11 +11,11 @@ class Camera(models.Model):
 
 
 class Criminals(models.Model):
-    first_name = models.CharField(max_length=120, null=False, blank=False, unique=True)
+    first_name = models.CharField(max_length=120, null=False, blank=False, unique=False)
     middle_name = models.CharField(
         max_length=120, null=False, blank=False, unique=False, default="sss"
     )
-    last_name = models.CharField(max_length=120, null=False, unique=True, blank=False)
+    last_name = models.CharField(max_length=120, null=False, unique=False, blank=False)
     age = models.IntegerField(blank=False, null=False, unique=False)
     description = models.TextField(
         max_length=5000, blank=False, null=False, unique=False
@@ -26,6 +26,5 @@ class Criminals(models.Model):
         indexes = [models.Index(fields=["first_name", "last_name", "age"])]
 
 class Encodings(models.Model):
-    criminal = models.CharField(max_length=150)
+    criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE)
     encoding = ArrayField(models.FloatField())
-    

@@ -48,7 +48,7 @@ def get_all_encodings_from_db():
             port=os.environ.get("DBPORT"),
         )
         cursor = conn.cursor()
-        cursor.execute("SELECT criminal, encoding FROM api_encodings")
+        cursor.execute("SELECT criminal_id, encoding FROM api_encodings")
         encoding_data = cursor.fetchall()
         cursor.close()
         conn.close()

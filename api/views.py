@@ -17,6 +17,7 @@ from api.utils import host_address
 from math import ceil
 
 import os
+import shutil
 import time
 
 
@@ -63,6 +64,12 @@ class CriminalsAPIView(ModelViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    def destroy(self, request, *args, **kwargs):
+        path = os.path.join("media", "criminals", kwargs.get("pk"))
+        if os.path.exists(path):
+            print("fuckin exists")
+            shutil.rmtree(path)
+        return super().destroy(request, *args, **kwargs)
 
 
 
