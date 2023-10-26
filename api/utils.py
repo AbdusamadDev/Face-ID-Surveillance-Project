@@ -28,18 +28,6 @@ def host():
     return public_ip
 
 
-def is_similar(new_encoding, threshold=250):
-    existing_encodings = get_all_encodings_from_db()
-    new_encoding = new_encoding.reshape(1, -1)
-    index = faiss.IndexFlatL2(existing_encodings.shape[1])
-    index.add(existing_encodings)
-    D, I = index.search(new_encoding, 1)
-    if D[0][0] < threshold:
-        return True
-
-    return False
-
-
 def get_face_encoding(img_np):
     model = insightface.app.FaceAnalysis()
     model.prepare(ctx_id=0)
@@ -60,18 +48,46 @@ def get_all_encodings_from_db():
             port=os.environ.get("DBPORT"),
         )
         cursor = conn.cursor()
-        cursor.execute("SELECT encoding FROM api_encodings")
-        encoding_list = cursor.fetchall()
+        cursor.execute("SELECT criminal, encoding FROM api_encodings")
+        encoding_data = cursor.fetchall()
         cursor.close()
         conn.close()
-        encodings = np.array([np.array(item[0]) for item in encoding_list])
-        return encodings
+        names = [item[0] for item in encoding_data]
+        encodings = np.array([np.array(item[1]) for item in encoding_data])
+        return names, encodings
     except Exception as e:
         print(f"An error occurred: {e}")
+        return None, None
+
+
+def is_similar(new_encoding, threshold=400):
+    existing_names, existing_encodings = get_all_encodings_from_db()
+    if existing_encodings.size == 0:
         return None
+
+    new_encoding = new_encoding.reshape(1, -1)
+    index = faiss.IndexFlatL2(existing_encodings.shape[1])
+    index.add(existing_encodings)
+    D, I = index.search(new_encoding, 1)
+    if D[0][0] < threshold:
+        return existing_names[I[0][0]]
+
+    return None
+
+
+def check_allowed_characters(value, exception):
+    lower_cases = [chr(i) for i in range(97, 123)]
+    capital_cases = [chr(j) for j in range(65, 91)]
+    numbers = [str(k) for k in range(10)]
+    others = ["_", "'", '"']
+    allowed_chrs = lower_cases + capital_cases + numbers + others
+    for letter in value:
+        if letter not in allowed_chrs:
+            raise exception
 
 
 allowed_characters = characters()
 host_address = host()
 process_image = get_face_encoding
 is_already_in = is_similar
+is_allowed_chr = check_allowed_characters

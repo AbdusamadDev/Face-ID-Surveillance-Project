@@ -20,13 +20,16 @@ class WebSocketManager:
         self.connections = set()
 
     async def register(self, websocket):
+        logging.info("Registering websocket")
         self.connections.add(websocket)
 
     async def unregister(self, websocket):
+        logging.info("Removing connection")
         self.connections.remove(websocket)
 
     async def send_to_all(self, message):
         if self.connections:
+            logging.info(f"Sending message to {len(self.connections)} clients.")
             for connection in self.connections:
                 if connection.open:
                     await connection.send(message)
@@ -73,8 +76,8 @@ class AlertManager:
         if (
             time_since_last_seen > 5 and time_since_last_alert > 3
         ):  # 3 seconds between alerts
-            self.save_screenshot(detected_face, frame)
-            await self.send_alert(detected_face, url)
+            image = self.save_screenshot(detected_face, frame)
+            await self.send_alert(detected_face, url, filename=image)
             self.last_alert_time[detected_face] = now  # Update last alert time
 
         # Update the last seen time for the face
@@ -92,9 +95,10 @@ class AlertManager:
             + f"/{datetime.now().hour}-{datetime.now().minute}-{datetime.now().second}.jpg"
         )
         cv2.imwrite(filename, frame)
+        return filename
 
     # Modify send_alert method in AlertManager class
-    async def send_alert(self, detected_face, url):
+    async def send_alert(self, detected_face, url, filename):
         database = Database()
         details = database.get_details(detected_face)
         camera = database.get_camera(url)
@@ -109,6 +113,7 @@ class AlertManager:
             "image": host_address + "/media/criminals/" + detected_face + "/main.jpg",
             "url": url,
             "camera": camera_details,
+            "screenshot": host_address + filename[2:]
         }
         print("Context: ", context)
         await self.websocket_manager.send_to_all(json.dumps(context))
@@ -139,6 +144,7 @@ class MainStream:
         cap = VideoStream(url).start()
         try:
             while True:
+                if datetime.now() - last_time
                 frame = cap.read()
                 if frame is None:
                     continue
@@ -156,6 +162,7 @@ class MainStream:
 
 async def websocket_server(websocket, path):
     await stream.websocket_manager.register(websocket)
+    logging.info("Registered a new WebSocket connection.")
     try:
         while True:
             if websocket.open:
@@ -165,10 +172,11 @@ async def websocket_server(websocket, path):
         logging.error("Connection closed")
     finally:
         await stream.websocket_manager.unregister(websocket)
+        logging.info("Unregistered a WebSocket connection.")
 
 
 if __name__ == "__main__":
-    camera_urls = ["http://192.168.1.142:5000/video"]
+    camera_urls = ["http://192.168.1.137:4747/video"]
     stream = MainStream(absolute_path + "/criminals/", camera_urls)
     loop = asyncio.get_event_loop()
     loop.run_until_complete(websockets.serve(websocket_server, "0.0.0.0", 5000))

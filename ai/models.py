@@ -48,3 +48,12 @@ class Database:
         query = "SELECT url FROM api_camera"
         rows = self._execute_query(query, ())
         return [row[0] for row in rows] if rows else []
+
+    def get_encodings(self):
+        query = self._execute_query("""SELECT encoding FROM api_encodings;""", ())
+        return [row[0] for row in query]
+
+
+if __name__ == "__main__":
+    database = Database()
+    print(database.get_encodings())
