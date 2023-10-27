@@ -3,14 +3,18 @@ import logging
 import cv2
 from datetime import datetime
 from imutils.video import VideoStream
-from train import FaceTrainer
 from models import Database
 import asyncio
 import os
+import torch
+import insightface
 import websockets
 import json
+import numpy as np
+import faiss
 from utils import host_address
 from path import absolute_path
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -32,6 +36,7 @@ class WebSocketManager:
             logging.info(f"Sending message to {len(self.connections)} clients.")
             for connection in self.connections:
                 if connection.open:
+                    print("Client: ", connection)
                     await connection.send(message)
 
 
@@ -103,17 +108,19 @@ class AlertManager:
         details = database.get_details(detected_face)
         camera = database.get_camera(url)
         camera_details = camera or None
-
         context = {
             "id": details[0],
             "first_name": detected_face,
             "last_name": details[1],
             "age": details[2],
             "description": details[-1],
-            "image": host_address + "/media/criminals/" + detected_face + "/main.jpg",
+            "image": str(host_address)
+            + "/media/criminals/"
+            + str(detected_face)
+            + "/main.jpg",
             "url": url,
             "camera": camera_details,
-            "screenshot": host_address + filename[2:]
+            "screenshot": host_address + filename[2:],
         }
         print("Context: ", context)
         await self.websocket_manager.send_to_all(json.dumps(context))
@@ -123,10 +130,14 @@ class MainStream:
     def __init__(self, root_dir, camera_urls):
         self.websocket_manager = WebSocketManager()
         self.urls = camera_urls
-        self.trainer = FaceTrainer(root_dir)
-        self.index = self.trainer.index
-        self.known_face_names = self.trainer.known_face_names
-        self.face_model = self.trainer.face_model
+        self.database = Database()
+        self.face_encodings, self.known_face_names = self.database.get_encodings()
+        self.face_model = insightface.app.FaceAnalysis()
+        ctx_id = 0
+        self.face_model.prepare(ctx_id=ctx_id)
+        self.known_face_encodings = np.array(self.face_encodings)
+        self.index = faiss.IndexFlatL2(self.known_face_encodings.shape[1])
+        self.index.add(self.known_face_encodings)
         self.alert_manager = AlertManager(self.websocket_manager)
         self.face_recognition = FaceRecognition(self)
 

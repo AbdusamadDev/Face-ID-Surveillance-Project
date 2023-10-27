@@ -35,7 +35,7 @@ class Database:
             return None
 
     def get_details(self, first_name):
-        query = "SELECT * FROM api_criminals WHERE first_name=%s"
+        query = "SELECT * FROM api_criminals WHERE id=%s"
         rows = self._execute_query(query, (first_name,))
         return rows[0] if rows else []
 
@@ -50,8 +50,10 @@ class Database:
         return [row[0] for row in rows] if rows else []
 
     def get_encodings(self):
-        query = self._execute_query("""SELECT encoding FROM api_encodings;""", ())
-        return [row[0] for row in query]
+        query = self._execute_query(
+            """SELECT criminal_id, encoding FROM api_encodings;""", ()
+        )
+        return [row[-1] for row in query], [rower[0] for rower in query]
 
 
 if __name__ == "__main__":

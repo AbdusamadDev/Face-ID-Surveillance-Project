@@ -67,7 +67,6 @@ class CriminalsAPIView(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         path = os.path.join("media", "criminals", kwargs.get("pk"))
         if os.path.exists(path):
-            print("fuckin exists")
             shutil.rmtree(path)
         return super().destroy(request, *args, **kwargs)
 

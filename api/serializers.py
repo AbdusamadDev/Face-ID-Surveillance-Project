@@ -58,9 +58,7 @@ class CriminalsSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         image = validated_data.pop("image", None)
         instance = super(CriminalsSerializer, self).create(validated_data)
-        print("Creation is being creation")
         if image:
-            print("Image exists")
             file_storage = FileSystemStorage()
             path = os.path.join("criminals", str(instance.pk), "main.jpg")
             file_storage.save(path, image)
