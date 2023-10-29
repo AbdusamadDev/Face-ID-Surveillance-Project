@@ -16,31 +16,21 @@ class CameraSerializer(serializers.ModelSerializer):
         model = Camera
         fields = "__all__"
 
-    def validate_name(self, value):
-        exception = ValidationError(
-            f"Field name: Only letters, capital letters, digits, and underscore are allowed."
-        )
-        if value:
-            is_allowed_chr(value, exception=exception)
-        return value
-
 
 class CriminalsSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(write_only=True, required=False)
+    image = serializers.ImageField(write_only=True, required=True)
 
     class Meta:
         model = Criminals
         fields = "__all__"
 
-    def validate(self, attrs):
-        exception = ValidationError(
-            "Name fields: Only letters, capital letters, digits, and underscore are allowed."
-        )
-        if attrs.get("first_name"):
-            is_allowed_chr(attrs.get("first_name"), exception)
-        if attrs.get("last_name"):
-            is_allowed_chr(attrs.get("last_name"), exception)
+    def __init__(self, *args, **kwargs):
+        super(CriminalsSerializer, self).__init__(*args, **kwargs)
+        if self.context["request"].method == "PATCH":
+            for field in self.fields.values():
+                field.required = False
 
+    def validate(self, attrs):
         image = attrs.get("image")
         if image:
             image.seek(0)

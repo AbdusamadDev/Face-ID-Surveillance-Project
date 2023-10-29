@@ -56,6 +56,46 @@ class Database:
         return [row[-1] for row in query], [rower[0] for rower in query]
 
 
+import psycopg2
+
+
+def get_details(first_name):
+    connection = psycopg2.connect(
+        dbname="postgres", user="postgres", password="2005", host="localhost"
+    )
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM api_criminals WHERE first_name=%s", (first_name,))
+    query = cursor.fetchall()
+    connection.close()
+    if query:
+        return query[0]
+    return []
+
+
+def get_camera(url):
+    connection = psycopg2.connect(
+        dbname="postgres", user="postgres", password="2005", host="localhost"
+    )
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM api_camera WHERE url=%s", (url,))
+    query = cursor.fetchall()
+    connection.close()
+    if query:
+        return query[0]
+    return []
+
+
+def get_camera_urls():
+    connection = psycopg2.connect(
+        dbname="postgres", user="postgres", password="2005", host="localhost"
+    )
+    cursor = connection.cursor()
+    cursor.execute("SELECT url FROM api_camera")
+    cameras = cursor.fetchall()
+    connection.close()
+    return [camera[0] for camera in cameras]
+
+
 if __name__ == "__main__":
     database = Database()
     print(database.get_encodings())

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Tashkent Client</title>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var ws = new WebSocket("ws://localhost:8765/");
+
+      ws.onopen = function (event) {
+        var locationData = {
+          latitude: 41.2995,
+          longitude: 69.2401
+        };
+        ws.send(JSON.stringify(locationData));
+      };
+
+      ws.onmessage = function (event) {
+        console.log("Server says: " + event.data);
+      };
+    });
+  </script>
+</head>
+
+<body>
+  <h1>WebSocket Client</h1>
+</body>
+
+</html>

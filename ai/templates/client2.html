@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Moscow Client</title>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var ws = new WebSocket("ws://localhost:8765/");
+
+            ws.onopen = function (event) {
+                var locationData = {
+                    latitude: 55.7558,
+                    longitude: 37.6176
+                };
+                ws.send(JSON.stringify(locationData));
+            };
+
+            ws.onmessage = function (event) {
+                console.log("Server says: " + event.data);
+            };
+        });
+    </script>
+</head>
+
+<body>
+    <h1>WebSocket Client</h1>
+</body>
+
+</html>

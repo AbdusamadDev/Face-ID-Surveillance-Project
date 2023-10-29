@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import ArrayField
 
 class Camera(models.Model):
     name = models.CharField(max_length=150, null=False, unique=True, blank=False)
-    image = models.ImageField(upload_to="./cameras/", default="none")
+    image = models.ImageField(upload_to="./cameras/", default="none", null=False, blank=False)
     url = models.CharField(max_length=150, unique=True, null=False, blank=False)
     longitude = models.FloatField(null=False, blank=False, unique=True)
     latitude = models.FloatField(null=False, blank=False, unique=True)

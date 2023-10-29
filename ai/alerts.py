@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 import json
-from models import get_camera, get_details
+from models import Database
 import cv2
 
 
@@ -10,6 +10,7 @@ class AlertManager:
         self.websocket_manager = websocket_manager
         self.last_alert_time = {}
         self.face_last_seen = {}
+        self.database = Database()
 
     async def handle_alert(self, detected_face, frame, url):
         now = datetime.now()
@@ -20,14 +21,11 @@ class AlertManager:
             now - self.face_last_seen.get(detected_face, datetime.min)
         ).total_seconds()
 
-        if (
-            time_since_last_seen > 5 and time_since_last_alert > 3
-        ):  # 3 seconds between alerts
+        if time_since_last_seen > 5 and time_since_last_alert > 3:
             self.save_screenshot(detected_face, frame)
             await self.send_alert(detected_face, url)
             self.last_alert_time[detected_face] = now  # Update last alert time
 
-        # Update the last seen time for the face
         self.face_last_seen[detected_face] = now
 
     def save_screenshot(self, detected_face, frame):
@@ -41,10 +39,9 @@ class AlertManager:
         )
         cv2.imwrite(filename, frame)
 
-    # Modify send_alert method in AlertManager class
     async def send_alert(self, detected_face, url):
-        details = get_details(detected_face)
-        camera = get_camera(url)
+        details = self.database.get_details(detected_face)
+        camera = self.database.get_camera(url)
         camera_details = camera or None
 
         context = {

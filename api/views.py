@@ -22,7 +22,7 @@ import time
 
 
 class CameraAPIView(ModelViewSet):
-    """Class for CRUD operation of Cmaera details"""
+    """Class for CRUD operation of Camera details"""
 
     model = Camera
     serializer_class = CameraSerializer
@@ -30,6 +30,31 @@ class CameraAPIView(ModelViewSet):
     lookup_field = "pk"
     filterset_class = CameraFilter
     pagination_class = CameraPagination
+
+    def delete_path(self, pk):
+        try:
+            camera = self.model.objects.get(pk=pk)
+        except:
+            return Response(
+                {"msg": "Error on fetching camera details"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        else:
+            image = os.path.join("media", str(camera.image))
+        if os.path.exists(image):
+            os.remove(image)
+
+    def update(self, request, *args, **kwargs):
+        self.delete_path(kwargs.get("pk"))
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        self.delete_path(kwargs.get("pk"))
+        return super().destroy(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        self.delete_path(kwargs.get("pk"))
+        return super().partial_update(request, *args, **kwargs)
 
 
 class CriminalsAPIView(ModelViewSet):
@@ -69,7 +94,6 @@ class CriminalsAPIView(ModelViewSet):
         if os.path.exists(path):
             shutil.rmtree(path)
         return super().destroy(request, *args, **kwargs)
-
 
 
 class BaseScreenshotsAPIView(APIView):
