@@ -4,21 +4,19 @@
 <head>
   <title>Tashkent Client</title>
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      var ws = new WebSocket("ws://localhost:8765/");
+    const wsNearestClient = new WebSocket('ws://localhost:5000');
+    wsNearestClient.onopen = function () {
+      wsNearestClient.send(JSON.stringify({ "latitude": 41.2995, "longitude": 69.2401 }));
+    };
+    wsNearestClient.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+      if (data.event === 'nearest_client') {
+        console.log('Data for nearest_client:', data.context);
+      } else if (data.event === 'all_clients') {
+        console.log('Data for all_clients:', data.context);
+      }
+    };
 
-      ws.onopen = function (event) {
-        var locationData = {
-          latitude: 41.2995,
-          longitude: 69.2401
-        };
-        ws.send(JSON.stringify(locationData));
-      };
-
-      ws.onmessage = function (event) {
-        console.log("Server says: " + event.data);
-      };
-    });
   </script>
 </head>
 

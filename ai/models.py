@@ -28,10 +28,12 @@ class Database:
             cursor = conn.cursor()
             cursor.execute(query, params)
             result = cursor.fetchall()
+            conn.commit()
             conn.close()
             return result
         except Exception as e:
             print(f"An error occurred: {e}")
+            conn.close()
             return None
 
     def get_details(self, first_name):

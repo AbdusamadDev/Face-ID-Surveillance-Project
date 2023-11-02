@@ -4,13 +4,16 @@ import cv2
 from datetime import datetime
 from imutils.video import VideoStream
 from train import FaceTrainer
-from models import get_details, get_camera
 import asyncio
 import os
 import websockets
 import json
-from utils import host_address
 from path import absolute_path
+from geopy.distance import geodesic
+import tracemalloc
+
+tracemalloc.start()
+
 
 logging.basicConfig(level=logging.INFO)
 
@@ -18,18 +21,77 @@ logging.basicConfig(level=logging.INFO)
 class WebSocketManager:
     def __init__(self):
         self.connections = set()
+        self.locations = {}
 
-    async def register(self, websocket):
+    async def register(self, websocket, location):
         self.connections.add(websocket)
+        self.locations[websocket] = location
+        logging.info(
+            f"Registered a client. Current connections: {len(self.connections)}"
+        )
+        logging.info(self.connections)
 
     async def unregister(self, websocket):
-        self.connections.remove(websocket)
+        if websocket in self.connections:
+            self.connections.remove(websocket)
+            if websocket in self.locations:
+                del self.locations[websocket]
+            logging.info(
+                f"Unregistered a client. Remaining connections: {len(self.connections)}"
+            )
+        else:
+            logging.warning(f"Trying to unregister a websocket that's not registered.")
 
     async def send_to_all(self, message):
-        if self.connections:
-            for connection in self.connections:
-                if connection.open:
-                    await connection.send(message)
+        for connection in self.connections:
+            if connection.open:
+                await connection.send(
+                    json.dumps({"event": "all_clients", "context": message})
+                )
+            else:
+                await self.unregister(connection)
+
+    async def send_to_nearest_client(self, message):
+        nearest_client, _ = self.find_nearest_client()
+        if nearest_client and nearest_client.open:
+            await nearest_client.send(
+                json.dumps({"event": "nearest_client", "context": message})
+            )
+
+    async def print_client_locations(self):
+        nearest_client, nearest_distance = self.find_nearest_client()
+        if nearest_client is not None:
+            msg = f"Nearest client is at {nearest_client.remote_address} with distance {nearest_distance} km"
+            print(msg)
+            await self.send_to_nearest_client(
+                json.dumps({"event": "nearest_client", "message": msg})
+            )
+
+    def find_nearest_client(self):
+        camera_location = (41.0649, 71.4782)
+        nearest_distance = float("inf")
+        nearest_client = None
+        for ws, location in self.locations.items():
+            print(type(location))
+            if not isinstance(location, tuple) or len(location) != 2:
+                logging.error(type(location))
+                logging.error(f"Invalid location data: {location}")
+                continue
+
+            try:
+                lat, long = float(location[0]), float(location[1])
+            except ValueError:
+                logging.error(f"Invalid coordinates: {location}")
+                continue
+
+            location = (lat, long)
+            distance = geodesic(camera_location, location).kilometers
+
+            if distance < nearest_distance:
+                nearest_distance = distance
+                nearest_client = ws
+
+        return nearest_client, nearest_distance
 
 
 class FaceRecognition:
@@ -81,7 +143,7 @@ class AlertManager:
         if time_since_last_seen > 5 and time_since_last_alert > 3:
             self.save_screenshot(detected_face, frame)
             await self.send_alert(detected_face, url)
-            self.last_alert_time[detected_face] = now  # Update last alert time
+            self.last_alert_time[detected_face] = now
 
         self.face_last_seen[detected_face] = now
 
@@ -111,7 +173,15 @@ class AlertManager:
             "camera": camera_details,
         }
         print("Context: ", context)
-        await self.websocket_manager.send_to_all(json.dumps(context))
+        await self.websocket_manager.send_to_all(
+            json.dumps({"event": "all_clients", "context": context})
+        )
+        await self.websocket_manager.send_to_nearest_client(
+            json.dumps({"event": "nearest_client", "context": context})
+        )
+
+        # camera_location = (41.0000, 71.6682)
+        # await self.websocket_manager.print_client_locations()
 
 
 class MainStream:
@@ -144,8 +214,8 @@ class MainStream:
                     continue
                 current_time = time.time()
                 await self.detect_and_process_faces(frame, current_time, url)
-        except KeyboardInterrupt:
-            logging.info(f"Stream {url} terminated by the user.")
+        except (KeyboardInterrupt, websockets.exceptions.ConnectionClosedError):
+            logging.info(f"Stream {url} terminated.")
         finally:
             cap.stop()
 
@@ -155,14 +225,20 @@ class MainStream:
 
 
 async def websocket_server(websocket, path):
-    await stream.websocket_manager.register(websocket)
     try:
+        logging.info("Attempt to connect received.")
+        location = await websocket.recv()
+        location_data = json.loads(location)
+        location = (location_data["latitude"], location_data["longitude"])
+        await stream.websocket_manager.register(websocket, location)
         while True:
             if websocket.open:
                 await websocket.ping()
             await asyncio.sleep(10)
-    except websockets.exceptions.ConnectionClosedError:
-        logging.error("Connection closed")
+    except websockets.exceptions.ConnectionClosedError as e:
+        logging.error(f"Connection closed: {e}")
+    except asyncio.exceptions.IncompleteReadError as e:
+        logging.error(f"Incomplete read: {e}")
     finally:
         await stream.websocket_manager.unregister(websocket)
 
@@ -171,5 +247,8 @@ if __name__ == "__main__":
     camera_urls = ["http://192.168.1.152:5000/video"]
     stream = MainStream(absolute_path + "/criminals/", camera_urls)
     loop = asyncio.get_event_loop()
+    print("Starting websocket server")
     loop.run_until_complete(websockets.serve(websocket_server, "0.0.0.0", 5000))
+    print("Websocket server started")
+
     loop.run_until_complete(stream.multiple_cameras())

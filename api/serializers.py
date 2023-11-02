@@ -16,6 +16,13 @@ class CameraSerializer(serializers.ModelSerializer):
         model = Camera
         fields = "__all__"
 
+    def __init__(self, *args, **kwargs):
+        super(CriminalsSerializer, self).__init__(*args, **kwargs)
+        if self.context["request"].method in ["PATCH", "PUT"]:
+            for field in self.fields.values():
+                field.required = False
+                print(field)
+
 
 class CriminalsSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(write_only=True, required=True)
@@ -26,9 +33,10 @@ class CriminalsSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super(CriminalsSerializer, self).__init__(*args, **kwargs)
-        if self.context["request"].method == "PATCH":
+        if self.context["request"].method in ["PATCH", "PUT"]:
             for field in self.fields.values():
                 field.required = False
+                print(field)
 
     def validate(self, attrs):
         image = attrs.get("image")
@@ -67,11 +75,18 @@ class CriminalsSerializer(serializers.ModelSerializer):
         return rep
 
     def update(self, instance, validated_data):
+        print(self.context.get("request").method)
         image = self.context["request"].FILES.get("image")
-
+        print(image)
+        if image is None:
+            image = validated_data.get("image")
+        print(image)
+        print("A debug before image")
         if image is not None:
+            print("Image is not being None")
             img_path = os.path.join("criminals", str(instance.pk), "main.jpg")
             if default_storage.exists(img_path):
+                print(img_path)
                 default_storage.delete(img_path)
             default_storage.save(img_path, image)
             image.seek(0)

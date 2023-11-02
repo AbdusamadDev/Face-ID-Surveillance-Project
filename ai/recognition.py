@@ -1,3 +1,6 @@
+SIMILARITY_THRESHOLD = 500
+
+
 class FaceRecognition:
     def __init__(self, main_stream):
         self.index = main_stream.index
@@ -6,16 +9,12 @@ class FaceRecognition:
 
     def process_frame(self, frame):
         faces = self.face_model.get(frame)
-        detected_faces = set()
-        for face in faces:
-            result = self.process_face(face)
-            if result:
-                detected_faces.add(result)
-        return detected_faces
+        return set(filter(None, [self.process_face(face) for face in faces]))
 
     async def process_face(self, face):
-        embedding = face.embedding
-        similarity, index = self.index.search(embedding.reshape(1, -1), 1)
-        if similarity[0, 0] < 500:
-            return self.known_face_names[index[0, 0]]
-        return None
+        similarity, index = self.index.search(face.embedding.reshape(1, -1), 1)
+        return (
+            self.known_face_names[index[0, 0]]
+            if similarity[0, 0] < SIMILARITY_THRESHOLD
+            else None
+        )

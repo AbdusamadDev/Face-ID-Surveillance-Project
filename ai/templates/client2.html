@@ -4,26 +4,24 @@
 <head>
     <title>Moscow Client</title>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var ws = new WebSocket("ws://localhost:8765/");
+        const wsNearestClient = new WebSocket('ws://localhost:5000');
+        wsNearestClient.onopen = function () {
+            wsNearestClient.send(JSON.stringify({ "latitude": 55.7558, "longitude": 37.6176 }));
+        };
+        wsNearestClient.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            if (data.event === 'nearest_client') {
+                console.log('Data for nearest_client:', data.context);
+            } else if (data.event === 'all_clients') {
+                console.log('Data for all_clients:', data.context);
+            }
+        };
 
-            ws.onopen = function (event) {
-                var locationData = {
-                    latitude: 55.7558,
-                    longitude: 37.6176
-                };
-                ws.send(JSON.stringify(locationData));
-            };
-
-            ws.onmessage = function (event) {
-                console.log("Server says: " + event.data);
-            };
-        });
     </script>
 </head>
 
 <body>
-    <h1>WebSocket Client</h1>
+    <h1>Moscow Client</h1>
 </body>
 
 </html>

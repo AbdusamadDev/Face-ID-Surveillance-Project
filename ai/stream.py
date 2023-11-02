@@ -1,15 +1,9 @@
 import time
 import logging
-import cv2
-from datetime import datetime
 from imutils.video import VideoStream
 from train import FaceTrainer
-from models import Database
 import asyncio
-import os
 import websockets
-import json
-from utils import host_address
 from path import absolute_path
 from web import WebSocketManager
 from alerts import AlertManager

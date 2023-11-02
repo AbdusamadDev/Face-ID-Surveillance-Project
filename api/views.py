@@ -1,5 +1,6 @@
 # Django and Django Rest Framework imports
 from django.http import JsonResponse
+from django.core.files.storage import default_storage
 from rest_framework.response import Response
 from rest_framework.request import HttpRequest
 from rest_framework.viewsets import ModelViewSet
@@ -15,7 +16,6 @@ from api.utils import host_address
 
 # Standard libraries imports
 from math import ceil
-
 import os
 import shutil
 import time
@@ -85,6 +85,7 @@ class CriminalsAPIView(ModelViewSet):
         serializer = self.serializer_class(
             instance, data=request.data, partial=True, context={"request": request}
         )
+
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
