@@ -20,10 +20,22 @@ class WebSocketManager:
         else:
             logging.warning("Unregistering an unrecognized client.")
 
+    async def send_to_nearest_client(self, message, location):
+        nearest_client, _ = self.find_nearest_client(location)
+        if (
+            nearest_client
+            and nearest_client.open
+            and self.clients[nearest_client][1] == "apk"
+        ):
+            await nearest_client.send(
+                json.dumps({"event": "nearest_client", "context": message})
+            )
+
     async def send_to_all(self, message):
         disconnected = []
         for client in self.clients:
-            if client.open:
+            print(self.clients)
+            if client.open and self.clients[client][1] == "web":
                 await client.send(
                     json.dumps({"event": "all_clients", "context": message})
                 )
@@ -32,14 +44,6 @@ class WebSocketManager:
 
         for client in disconnected:
             await self.unregister(client)
-
-    async def send_to_nearest_client(self, message, location):
-        print(self.clients)
-        nearest_client, _ = self.find_nearest_client(location)
-        if nearest_client and nearest_client.open:
-            await nearest_client.send(
-                json.dumps({"event": "nearest_client", "context": message})
-            )
 
     def find_nearest_client(self, loc):
         nearest_distance = float("inf")

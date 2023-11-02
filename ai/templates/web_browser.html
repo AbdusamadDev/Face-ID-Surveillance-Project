@@ -2,11 +2,11 @@
 <html>
 
 <head>
-    <title>Moscow Client</title>
+    <title>Browser</title>
     <script>
         const wsNearestClient = new WebSocket('ws://localhost:5000');
         wsNearestClient.onopen = function () {
-            wsNearestClient.send(JSON.stringify({ "latitude": 55.7558, "longitude": 37.6176 , "state": "apk"}));
+            wsNearestClient.send(JSON.stringify({ "latitude": 55.7558, "longitude": 37.6176, "state": "web" }));
         };
         wsNearestClient.onmessage = function (event) {
             const data = JSON.parse(event.data);
@@ -17,7 +17,7 @@
 </head>
 
 <body>
-    <h1>Moscow Client</h1>
+    <h1>Web Browser Client</h1>
 </body>
 
 </html>

@@ -6,15 +6,11 @@
   <script>
     const wsNearestClient = new WebSocket('ws://localhost:5000');
     wsNearestClient.onopen = function () {
-      wsNearestClient.send(JSON.stringify({ "latitude": 41.2995, "longitude": 69.2401 }));
+      wsNearestClient.send(JSON.stringify({ "latitude": 41.2995, "longitude": 69.2401, "state": "apk" }));
     };
     wsNearestClient.onmessage = function (event) {
       const data = JSON.parse(event.data);
-      if (data.event === 'nearest_client') {
-        console.log('Data for nearest_client:', data.context);
-      } else if (data.event === 'all_clients') {
-        console.log('Data for all_clients:', data.context);
-      }
+      console.log(data)
     };
 
   </script>
