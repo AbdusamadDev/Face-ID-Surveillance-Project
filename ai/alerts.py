@@ -54,11 +54,11 @@ class AlertManager:
             "camera": camera_details,
         }
         location = (40.9983, 71.67257)
-        print(context)
-        await self.websocket_manager.send_to_all(
+        print("Result in alert manager: \n\n", context)
+        await self.websocket_manager.broadcast_to_web_clients(
             json.dumps({"event": "all_clients", "context": context})
         )
-        await self.websocket_manager.send_to_nearest_client(
+        await self.websocket_manager.send_to_nearest_apk_client(
             message=json.dumps({"event": "nearest_client", "context": context}),
             location=location,
         )
