@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>New York Client</title>
+    <script>
+        const wsNearestClient = new WebSocket('ws://localhost:5000');
+        wsNearestClient.onopen = function () {
+            wsNearestClient.send(JSON.stringify({ "latitude": 24.0000, "longitude": 45.0000 }));
+        };
+        wsNearestClient.onmessage = function (event) {
+            const data = JSON.parse(event.data);
+            if (data.event === 'nearest_client') {
+                console.log('Data for nearest_client:', data.context);
+            } else if (data.event === 'all_clients') {
+                console.log('Data for all_clients:', data.context);
+            }
+        };
+
+    </script>
+</head>
+
+<body>
+    <h1>Saudi Arabia Client</h1>
+</body>
+
+</html>

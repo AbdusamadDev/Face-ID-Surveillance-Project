@@ -5,72 +5,52 @@ from geopy.distance import geodesic
 
 class WebSocketManager:
     def __init__(self):
-        self.connections = set()
-        self.locations = {}
+        self.clients = {}  # { websocket: location }
 
     async def register(self, websocket, location):
-        self.connections.add(websocket)
-        self.locations[websocket] = location
-        logging.info(
-            f"Registered a client. Current connections: {len(self.connections)}"
-        )
-        logging.info(self.connections)
+        self.clients[websocket] = location
+        logging.info(f"Registered a client. Total clients: {len(self.clients)}")
 
     async def unregister(self, websocket):
-        if websocket in self.connections:
-            self.connections.remove(websocket)
-            if websocket in self.locations:
-                del self.locations[websocket]
+        if websocket in self.clients:
+            del self.clients[websocket]
             logging.info(
-                f"Unregistered a client. Remaining connections: {len(self.connections)}"
+                f"Unregistered a client. Remaining clients: {len(self.clients)}"
             )
         else:
-            logging.warning(f"Trying to unregister a websocket that's not registered.")
+            logging.warning("Unregistering an unrecognized client.")
 
     async def send_to_all(self, message):
-        for connection in self.connections:
-            if connection.open:
-                await connection.send(
+        disconnected = []
+        for client in self.clients:
+            if client.open:
+                await client.send(
                     json.dumps({"event": "all_clients", "context": message})
                 )
             else:
-                await self.unregister(connection)
+                disconnected.append(client)
+
+        for client in disconnected:
+            await self.unregister(client)
 
     async def send_to_nearest_client(self, message, location):
+        print(self.clients)
         nearest_client, _ = self.find_nearest_client(location)
         if nearest_client and nearest_client.open:
             await nearest_client.send(
                 json.dumps({"event": "nearest_client", "context": message})
             )
 
-    async def print_client_locations(self):
-        nearest_client, nearest_distance = self.find_nearest_client()
-        if nearest_client is not None:
-            msg = f"Nearest client is at {nearest_client.remote_address} with distance {nearest_distance} km"
-            await self.send_to_nearest_client(
-                json.dumps({"event": "nearest_client", "message": msg})
-            )
-
-    def find_nearest_client(self, location):
+    def find_nearest_client(self, loc):
         nearest_distance = float("inf")
         nearest_client = None
-        for ws, location in self.locations.items():
-            if not isinstance(location, tuple) or len(location) != 2:
-                logging.error(type(location))
-                logging.error(f"Invalid location data: {location}")
-                continue
-
+        for client, client_loc in self.clients.items():
             try:
-                lat, long = float(location[0]), float(location[1])
-            except ValueError:
-                logging.error(f"Invalid coordinates: {location}")
-                continue
-
-            location = (lat, long)
-            distance = geodesic(location, location).kilometers
-
-            if distance < nearest_distance:
-                nearest_distance = distance
-                nearest_client = ws
+                distance = geodesic(loc, client_loc).kilometers
+                if distance < nearest_distance:
+                    nearest_distance = distance
+                    nearest_client = client
+            except (ValueError, TypeError):
+                logging.error(f"Invalid location or coordinates: {client_loc}")
 
         return nearest_client, nearest_distance
