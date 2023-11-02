@@ -1,15 +1,12 @@
+import asyncio
 import time
 import logging
 from imutils.video import VideoStream
-from train import FaceTrainer
-import asyncio
-import websockets
-from path import absolute_path
 from web import WebSocketManager
 from alerts import AlertManager
 from recognition import FaceRecognition
-
-logging.basicConfig(level=logging.INFO)
+from train import FaceTrainer
+import websockets
 
 
 class MainStream:
@@ -42,35 +39,11 @@ class MainStream:
                     continue
                 current_time = time.time()
                 await self.detect_and_process_faces(frame, current_time, url)
-        except KeyboardInterrupt:
-            logging.info(f"Stream {url} terminated by the user.")
+        except (KeyboardInterrupt, websockets.exceptions.ConnectionClosedError):
+            logging.info(f"Stream {url} terminated.")
         finally:
             cap.stop()
 
     async def multiple_cameras(self):
         tasks = [self.continuous_stream_faces(url) for url in self.urls]
         await asyncio.gather(*tasks)
-
-
-async def websocket_server(websocket, path, stream):
-    await stream.websocket_manager.register(websocket)
-    try:
-        while True:
-            if websocket.open:
-                await websocket.ping()
-            await asyncio.sleep(10)
-    except websockets.exceptions.ConnectionClosedError:
-        logging.error("Connection closed")
-    finally:
-        await stream.websocket_manager.unregister(websocket)
-
-
-if __name__ == "__main__":
-    camera_urls = ["http://192.168.1.152:5000/video"]
-    stream = MainStream(absolute_path + "/criminals/", camera_urls)
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(
-        websockets.serve(lambda *args: websocket_server(*args, stream), "0.0.0.0", 5000)
-    )
-
-    loop.run_until_complete(stream.multiple_cameras())
