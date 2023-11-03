@@ -35,31 +35,6 @@ class CameraAPIView(ModelViewSet):
     filterset_class = CameraFilter
     pagination_class = CameraPagination
 
-    def delete_path(self, pk):
-        try:
-            camera = self.model.objects.get(pk=pk)
-        except:
-            return Response(
-                {"msg": "Error on fetching camera details"},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE,
-            )
-        else:
-            image = os.path.join("media", str(camera.image))
-        if os.path.exists(image):
-            os.remove(image)
-
-    def update(self, request, *args, **kwargs):
-        self.delete_path(kwargs.get("pk"))
-        return super().update(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        self.delete_path(kwargs.get("pk"))
-        return super().destroy(request, *args, **kwargs)
-
-    def partial_update(self, request, *args, **kwargs):
-        self.delete_path(kwargs.get("pk"))
-        return super().partial_update(request, *args, **kwargs)
-
 
 class CriminalsAPIView(ModelViewSet):
     """
@@ -206,6 +181,5 @@ class FilterAPIView(ListAPIView):
 
     def get_queryset(self):
         pass
-
 
 # 939110925

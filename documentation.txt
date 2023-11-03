@@ -1,0 +1,8 @@
+After 2 months trial, Following conclusions are taken:
+
+CUDA version == 11.8
+NVIDIA version == *
+cuDNN version == 8.x
+onnxruntime GPU version == 1.15.0
+
+and also first import torch and then import insightface otherwise goes back to CPU

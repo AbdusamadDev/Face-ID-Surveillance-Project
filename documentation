@@ -1,6 +1,0 @@
-After 2 months trial, Following conclusions are taken:
-
-CUDA version == 11.8
-NVIDIA version == *
-cuDNN version == 8.x
-onnxruntime GPU version == 1.15.0

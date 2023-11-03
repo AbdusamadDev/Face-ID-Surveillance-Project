@@ -1,4 +1,7 @@
 import socket
+import cv2
+import os
+from datetime import datetime
 
 
 def host():
@@ -11,6 +14,16 @@ def host():
     finally:
         s.close()
     return public_ip
+
+
+def save_screenshot(frame, path):
+    if not os.path.exists(path):
+        os.makedirs(path)
+    filename = (
+            path
+            + f"/{datetime.now().hour}-{datetime.now().minute}-{datetime.now().second}.jpg"
+    )
+    cv2.imwrite(filename, frame)
 
 
 host_address = host()

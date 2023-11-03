@@ -1,19 +1,20 @@
-import time
-import logging
-import cv2
-from datetime import datetime
-from imutils.video import VideoStream
-from train import FaceTrainer
 import asyncio
-import os
-import websockets
 import json
-from path import absolute_path
-from geopy.distance import geodesic
+import logging
+import time
 import tracemalloc
+from datetime import datetime
+
+import websockets
+from geopy.distance import geodesic
+from imutils.video import VideoStream
+
+from models import Database
+from path import absolute_path
+from train import FaceTrainer
+from utils import save_screenshot, host_address
 
 tracemalloc.start()
-
 
 logging.basicConfig(level=logging.INFO)
 
@@ -114,13 +115,6 @@ class FaceRecognition:
         return None
 
 
-import os
-from datetime import datetime
-import json
-from models import Database
-import cv2
-
-
 class AlertManager:
     def __init__(self, websocket_manager):
         self.websocket_manager = websocket_manager
@@ -134,44 +128,47 @@ class AlertManager:
         time_since_last_alert = (now - last_alert_time).total_seconds()
 
         time_since_last_seen = (
-            now - self.face_last_seen.get(detected_face, datetime.min)
+                now - self.face_last_seen.get(detected_face, datetime.min)
         ).total_seconds()
 
         if time_since_last_seen > 5 and time_since_last_alert > 3:
             await self.send_alert(detected_face, url)
-            self.save_screenshot(detected_face, frame)
+            year, month, day = datetime.now().timetuple()[:3]
+            path = (
+                f"../media/screenshots/criminals/{detected_face}/{year}/{month}/{day}"
+            )
+            save_screenshot(frame, path=path)
             self.last_alert_time[detected_face] = now
 
         self.face_last_seen[detected_face] = now
-
-    def save_screenshot(self, detected_face, frame):
-        year, month, day = datetime.now().timetuple()[:3]
-        path = f"../media/screenshots/criminals/{detected_face}/{year}/{month}/{day}"
-        if not os.path.exists(path):
-            os.makedirs(path)
-        filename = (
-            path
-            + f"/{datetime.now().hour}-{datetime.now().minute}-{datetime.now().second}.jpg"
-        )
-        cv2.imwrite(filename, frame)
 
     async def send_alert(self, detected_face, url):
         details = self.database.get_details(detected_face)
         camera = self.database.get_camera(url)
         camera_details = camera or None
-
+        camera_context = {
+            "id": camera_details[0],
+            "name": camera_details[1],
+            "url": camera_details[2],
+            "longitude": camera_details[3],
+            "latitude": camera_details[4],
+            "image": host_address + "/" + camera_details[-1]
+        }
         context = {
             "id": details[0],
-            "first_name": detected_face,
-            "last_name": details[1],
-            "age": details[2],
-            "description": details[-1],
+            "first_name": details[1],
+            "last_name": details[2],
+            "middle_name": details[-1],
+            "age": details[3],
+            "description": details[4],
+            "date_joined": str(details[5]),
             "url": url,
-            "camera": camera_details,
+            "camera": camera_context,
         }
+
         print("Context: ", context)
         await self.websocket_manager.send_to_all(
-            json.dumps({"event": "all_clients", "context": context})
+            json.dumps(context)
         )
         await self.websocket_manager.send_to_nearest_client(
             json.dumps({"event": "nearest_client", "context": context})
@@ -204,11 +201,19 @@ class MainStream:
 
     async def continuous_stream_faces(self, url):
         cap = VideoStream(url).start()
+        screenshot_interval = 5  # Interval to take a screenshot in seconds
+        last_screenshot_time = time.time()
         try:
             while True:
                 frame = cap.read()
                 if frame is None:
                     continue
+
+                current_time = time.time()
+                if current_time - last_screenshot_time >= screenshot_interval:
+                    save_screenshot(frame, path="../media/screenshots/suspends")
+                    last_screenshot_time = current_time
+
                 await self.detect_and_process_faces(frame, url)
         except (KeyboardInterrupt, websockets.exceptions.ConnectionClosedError):
             logging.info(f"Stream {url} terminated.")
@@ -241,7 +246,9 @@ async def websocket_server(websocket, path):
 
 
 if __name__ == "__main__":
-    camera_urls = ["http://192.168.1.152:5000/video"]
+    # camera_urls = ["http://192.168.1.152:5000/video"]
+    database = Database()
+    camera_urls = database.get_camera_urls()
     stream = MainStream(absolute_path + "/criminals/", camera_urls)
     loop = asyncio.get_event_loop()
     print("Starting websocket server")
