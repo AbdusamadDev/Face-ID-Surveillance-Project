@@ -1,24 +1,28 @@
-# Django and Django Rest Framework imports
+############### Django and Django Rest Framework imports ################
 from django.http import JsonResponse
-from django.core.files.storage import default_storage
-from rest_framework.response import Response
-from rest_framework.request import HttpRequest
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.generics import ListAPIView
+from rest_framework.request import HttpRequest
+from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework import status
+from rest_framework import status  #
 
-# Local apps imports
-from api.filters import CameraFilter, CriminalsFilter
-from api.models import Camera, Criminals
+########################## Local apps imports ###########################
 from api.pagination import CameraPagination, CriminalsPagination
-from api.serializers import CameraSerializer, CriminalsSerializer
+from api.models import Camera, Criminals, CriminalsRecords
+from api.filters import CameraFilter, CriminalsFilter
 from api.utils import host_address
+from api.serializers import (
+    CriminalsRecordsSerializer,
+    CriminalsSerializer,
+    CameraSerializer,
+)
 
-# Standard libraries imports
+##################### Standard libraries imports ########################
 from math import ceil
-import os
 import shutil
 import time
+import os
 
 
 class CameraAPIView(ModelViewSet):
@@ -194,6 +198,14 @@ class UnknownFacesImageView(APIView):
                 "ip_address": host_address,
             }
         )
+
+
+class FilterAPIView(ListAPIView):
+    model = CriminalsRecords
+    serializer_class = CriminalsRecordsSerializer
+
+    def get_queryset(self):
+        pass
 
 
 # 939110925

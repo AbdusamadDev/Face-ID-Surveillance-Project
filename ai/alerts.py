@@ -1,8 +1,8 @@
-import os
-import json
-import cv2
 from datetime import datetime
 from models import Database
+import json
+import cv2
+import os
 
 
 class AlertManager:
@@ -22,8 +22,8 @@ class AlertManager:
         ).total_seconds()
 
         if time_since_last_seen > 5 and time_since_last_alert > 3:
-            self.save_screenshot(detected_face, frame)
             await self.send_alert(detected_face, url)
+            self.save_screenshot(detected_face, frame)
             self.last_alert_time[detected_face] = now
 
         self.face_last_seen[detected_face] = now
@@ -54,11 +54,13 @@ class AlertManager:
             "camera": camera_details,
         }
         location = (40.9983, 71.67257)
-        print("Result in alert manager: \n\n", context)
         await self.websocket_manager.broadcast_to_web_clients(
             json.dumps({"event": "all_clients", "context": context})
-        )
+        )   
         await self.websocket_manager.send_to_nearest_apk_client(
             message=json.dumps({"event": "nearest_client", "context": context}),
             location=location,
         )
+        print("Result in alert manager: \n\n", context)
+        print("Websocket object in Alert Manager:\n\n\n", self.websocket_manager)
+

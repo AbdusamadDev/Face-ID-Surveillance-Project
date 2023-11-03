@@ -6,7 +6,7 @@
     <script>
         const wsNearestClient = new WebSocket('ws://localhost:5000');
         wsNearestClient.onopen = function () {
-            wsNearestClient.send(JSON.stringify({ "latitude": 55.7558, "longitude": 37.6176, "state": "web" }));
+            wsNearestClient.send(JSON.stringify({"state": "web" }));
         };
         wsNearestClient.onmessage = function (event) {
             const data = JSON.parse(event.data);

@@ -20,37 +20,34 @@ logging.basicConfig(level=logging.INFO)
 
 class WebSocketManager:
     def __init__(self):
-        self.connections = set()
+        self.web_clients = set()
+        self.apk_clients = set()
         self.locations = {}
 
-    async def register(self, websocket, location):
-        self.connections.add(websocket)
-        self.locations[websocket] = location
+    async def register(self, websocket, data):
+        if data["state"] == "apk":
+            self.apk_clients.add(websocket)
+            self.locations[websocket] = (data["latitude"], data["longitude"])
+        else:
+            self.web_clients.add(websocket)
         logging.info(
-            f"Registered a client. Current connections: {len(self.connections)}"
+            f"Registered a {data['state']} client. Total web: {len(self.web_clients)}, apk: {len(self.apk_clients)}"
         )
-        logging.info(self.connections)
 
     async def unregister(self, websocket):
-        if websocket in self.connections:
-            self.connections.remove(websocket)
-            if websocket in self.locations:
-                del self.locations[websocket]
-            logging.info(
-                f"Unregistered a client. Remaining connections: {len(self.connections)}"
-            )
-        else:
-            logging.warning(f"Trying to unregister a websocket that's not registered.")
+        if websocket in self.apk_clients:
+            self.apk_clients.remove(websocket)
+            del self.locations[websocket]
+        elif websocket in self.web_clients:
+            self.web_clients.remove(websocket)
+        logging.info(
+            f"Unregistered a client. Remaining web: {len(self.web_clients)}, apk: {len(self.apk_clients)}"
+        )
 
     async def send_to_all(self, message):
-        connections_copy = list(self.connections)  # Create a static copy of connections
-        for connection in connections_copy:
-            if connection.open:
-                await connection.send(
-                    json.dumps({"event": "all_clients", "context": message})
-                )
-            else:
-                await self.unregister(connection)
+        for web_client in self.web_clients:
+            if web_client.open:
+                await web_client.send(message)
 
     async def send_to_nearest_client(self, message):
         nearest_client, _ = self.find_nearest_client()
@@ -73,7 +70,6 @@ class WebSocketManager:
         nearest_distance = float("inf")
         nearest_client = None
         for ws, location in self.locations.items():
-            print(type(location))
             if not isinstance(location, tuple) or len(location) != 2:
                 logging.error(type(location))
                 logging.error(f"Invalid location data: {location}")
@@ -142,15 +138,15 @@ class AlertManager:
         ).total_seconds()
 
         if time_since_last_seen > 5 and time_since_last_alert > 3:
-            self.save_screenshot(detected_face, frame)
             await self.send_alert(detected_face, url)
+            self.save_screenshot(detected_face, frame)
             self.last_alert_time[detected_face] = now
 
         self.face_last_seen[detected_face] = now
 
     def save_screenshot(self, detected_face, frame):
         year, month, day = datetime.now().timetuple()[:3]
-        path = f"../media/screenshots/{detected_face}/{year}/{month}/{day}"
+        path = f"../media/screenshots/criminals/{detected_face}/{year}/{month}/{day}"
         if not os.path.exists(path):
             os.makedirs(path)
         filename = (
@@ -225,22 +221,23 @@ class MainStream:
 
 
 async def websocket_server(websocket, path):
+    manager = stream.websocket_manager
     try:
         logging.info("Attempt to connect received.")
-        location = await websocket.recv()
-        location_data = json.loads(location)
-        location = (location_data["latitude"], location_data["longitude"])
-        await stream.websocket_manager.register(websocket, location)
+        message = await websocket.recv()
+        data = json.loads(message)
+        await manager.register(websocket, data)
+
         while True:
-            if websocket.open:
-                await websocket.ping()
+            # Here you can add any additional message handling logic if needed
             await asyncio.sleep(10)
+
     except websockets.exceptions.ConnectionClosedError as e:
         logging.error(f"Connection closed: {e}")
-    except asyncio.exceptions.IncompleteReadError as e:
-        logging.error(f"Incomplete read: {e}")
+    except json.JSONDecodeError as e:
+        logging.error(f"JSON decode error: {e}")
     finally:
-        await stream.websocket_manager.unregister(websocket)
+        await manager.unregister(websocket)
 
 
 if __name__ == "__main__":

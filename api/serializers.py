@@ -1,14 +1,19 @@
-from django.core.exceptions import ValidationError
 from django.core.files.storage import FileSystemStorage
 from django.core.files.storage import default_storage
+from django.core.exceptions import ValidationError
 from rest_framework import serializers
 
-from api.models import Camera, Criminals, Encodings
-from api.utils import host_address, process_image, is_allowed_chr, is_already_in
+from api.utils import host_address, process_image
+from api.models import (
+    CriminalsRecords,
+    Criminals,
+    Encodings,
+    Camera,
+)
 
-import os
-import cv2
 import numpy as np
+import cv2
+import os
 
 
 class CameraSerializer(serializers.ModelSerializer):
@@ -33,7 +38,7 @@ class CriminalsSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super(CriminalsSerializer, self).__init__(*args, **kwargs)
-        if self.context["request"].method in ["PATCH", "PUT"]:
+        if self.context["request"].method in ["PATCH"]:
             for field in self.fields.values():
                 field.required = False
                 print(field)
@@ -105,3 +110,9 @@ class CriminalsSerializer(serializers.ModelSerializer):
                     print(f"Encoding Object does not exist for pk: {instance.pk}")
 
         return super().update(instance, validated_data)
+
+
+class CriminalsRecordsSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = "__all__"
+        model = CriminalsRecords

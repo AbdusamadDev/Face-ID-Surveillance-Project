@@ -28,3 +28,8 @@ class Criminals(models.Model):
 class Encodings(models.Model):
     criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE)
     encoding = ArrayField(models.FloatField())
+
+class CriminalsRecords(models.Model):
+    criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE)
+    image_path = models.FilePathField()
+    date_recorded = models.DateTimeField(auto_now_add=True)
