@@ -9,16 +9,11 @@ from api.views import *
 router = DefaultRouter()
 router.register(r"criminals", CriminalsAPIView)
 router.register(r"camera", CameraAPIView)
+router.register(r"records", FilterAPIView)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include(router.urls)),
-    # path("cameras/", CameraImageView.as_view(), name="camera_images"),
-    # path(
-    #     "media/<str:username>/main.jpg",
-    #     MediaMainImageView.as_view(),
-    #     name="media_main_image",
-    # ),
     path(
         "screenshots/<username>/",
         ScreenshotImagesAPIView.as_view(),

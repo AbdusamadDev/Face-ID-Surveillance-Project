@@ -24,6 +24,7 @@ def save_screenshot(frame, path):
             + f"/{datetime.now().hour}-{datetime.now().minute}-{datetime.now().second}.jpg"
     )
     cv2.imwrite(filename, frame)
+    return filename
 
 
 host_address = host()

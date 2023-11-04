@@ -1,6 +1,7 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 load_dotenv()
 
@@ -26,6 +27,7 @@ class Database:
         try:
             conn = self._db_connect()
             cursor = conn.cursor()
+            self.cursor = cursor
             cursor.execute(query, params)
             result = cursor.fetchall()
             conn.commit()
@@ -57,8 +59,17 @@ class Database:
         )
         return [row[-1] for row in query], [rower[0] for rower in query]
 
-
-import psycopg2
+    def insert_records(self, image, date_recorded, criminal, camera):
+        connection = self._db_connect()
+        cursor = connection.cursor()
+        cursor.execute(
+            """
+            INSERT INTO api_criminalsrecords (image_path, date_recorded, criminal_id, camera_id)
+            VALUES (%s, %s, %s, %s)
+            """,
+            (image, date_recorded, criminal, camera)
+        )
+        connection.commit()
 
 
 def get_details(first_name):
@@ -100,4 +111,4 @@ def get_camera_urls():
 
 if __name__ == "__main__":
     database = Database()
-    print(database.get_encodings())
+    database.insert_records(image="sadfsfd", date_recorded=datetime.now(), criminal=128, camera=32)

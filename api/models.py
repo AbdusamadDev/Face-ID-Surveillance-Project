@@ -5,9 +5,9 @@ from django.contrib.postgres.fields import ArrayField
 class Camera(models.Model):
     name = models.CharField(max_length=150, null=False, unique=False, blank=False)
     image = models.ImageField(upload_to="./cameras/", default="none", null=False, blank=False)
-    url = models.CharField(max_length=150, unique=True, null=False, blank=False)
-    longitude = models.FloatField(null=False, blank=False, unique=True)
-    latitude = models.FloatField(null=False, blank=False, unique=True)
+    url = models.CharField(max_length=150, unique=False, null=False, blank=False)
+    longitude = models.FloatField(null=False, blank=False, unique=False)
+    latitude = models.FloatField(null=False, blank=False, unique=False)
 
 
 class Criminals(models.Model):
@@ -25,11 +25,14 @@ class Criminals(models.Model):
     class Meta:
         indexes = [models.Index(fields=["first_name", "last_name", "age"])]
 
+
 class Encodings(models.Model):
     criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE)
     encoding = ArrayField(models.FloatField())
 
+
 class CriminalsRecords(models.Model):
-    criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE)
-    image_path = models.FilePathField()
+    criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE, default=1)
+    camera = models.ForeignKey(to=Camera, on_delete=models.CASCADE, default=1)
+    image_path = models.URLField(default="https://www.youtube.com")
     date_recorded = models.DateTimeField(auto_now_add=True)

@@ -1,21 +1,28 @@
 ############### Django and Django Rest Framework imports ################
 from django.http import JsonResponse
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.generics import ListAPIView
 from rest_framework.request import HttpRequest
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import status  #
 
 ########################## Local apps imports ###########################
-from api.pagination import CameraPagination, CriminalsPagination
 from api.models import Camera, Criminals, CriminalsRecords
-from api.filters import CameraFilter, CriminalsFilter
 from api.utils import host_address
+from api.pagination import (
+    CriminalsRecordsPagination,
+    CriminalsPagination,
+    CameraPagination,
+)
 from api.serializers import (
     CriminalsRecordsSerializer,
     CriminalsSerializer,
     CameraSerializer,
+)
+from api.filters import (
+    CriminalsRecordFilter,
+    CriminalsFilter,
+    CameraFilter,
 )
 
 ##################### Standard libraries imports ########################
@@ -175,11 +182,12 @@ class UnknownFacesImageView(APIView):
         )
 
 
-class FilterAPIView(ListAPIView):
+class FilterAPIView(ModelViewSet):
     model = CriminalsRecords
     serializer_class = CriminalsRecordsSerializer
-
-    def get_queryset(self):
-        pass
+    queryset = CriminalsRecords.objects.all()
+    pagination_class = CriminalsRecordsPagination
+    filterset_class = CriminalsRecordFilter
+    http_method_names = ['get', 'head', 'options', "post", "delete"]
 
 # 939110925

@@ -7,3 +7,7 @@ class CameraPagination(PageNumberPagination):
 
 class CriminalsPagination(PageNumberPagination):
     page_size = 10
+
+
+class CriminalsRecordsPagination(PageNumberPagination):
+    page_size = 5

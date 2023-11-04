@@ -15,7 +15,6 @@ from train import FaceTrainer
 from utils import save_screenshot, host_address
 
 tracemalloc.start()
-
 logging.basicConfig(level=logging.INFO)
 
 
@@ -53,18 +52,7 @@ class WebSocketManager:
     async def send_to_nearest_client(self, message):
         nearest_client, _ = self.find_nearest_client()
         if nearest_client and nearest_client.open:
-            await nearest_client.send(
-                json.dumps({"event": "nearest_client", "context": message})
-            )
-
-    async def print_client_locations(self):
-        nearest_client, nearest_distance = self.find_nearest_client()
-        if nearest_client is not None:
-            msg = f"Nearest client is at {nearest_client.remote_address} with distance {nearest_distance} km"
-            print(msg)
-            await self.send_to_nearest_client(
-                json.dumps({"event": "nearest_client", "message": msg})
-            )
+            await nearest_client.send(message)
 
     def find_nearest_client(self):
         camera_location = (41.0649, 71.4782)
@@ -137,7 +125,16 @@ class AlertManager:
             path = (
                 f"../media/screenshots/criminals/{detected_face}/{year}/{month}/{day}"
             )
-            save_screenshot(frame, path=path)
+            image_name = save_screenshot(frame, path=path)
+            camera_object = self.database.get_camera(url)
+            if camera_object:
+                camera_object = camera_object[0]
+            self.database.insert_records(
+                image=f"{host_address}{image_name[2:]}",
+                date_recorded=datetime.now(),
+                criminal=int(detected_face),
+                camera=camera_object
+            )
             self.last_alert_time[detected_face] = now
 
         self.face_last_seen[detected_face] = now
@@ -171,7 +168,7 @@ class AlertManager:
             json.dumps(context)
         )
         await self.websocket_manager.send_to_nearest_client(
-            json.dumps({"event": "nearest_client", "context": context})
+            json.dumps(context)
         )
 
         # camera_location = (41.0000, 71.6682)

@@ -21,6 +21,45 @@ class CameraSerializer(serializers.ModelSerializer):
         model = Camera
         fields = "__all__"
 
+    def __init__(self, *args, **kwargs):
+        super(CameraSerializer, self).__init__(*args, **kwargs)
+        request = self.context.get('request')
+
+        if request and request.method == 'PATCH':
+            self.fields['image'].required = False
+            self.fields['image'].allow_null = True
+
+    def create(self, validated_data):
+        image = validated_data.pop('image', None)
+        instance = Camera.objects.create(**validated_data)
+
+        if image:
+            instance.image.save(image.name, image)
+            instance.save()
+
+        return instance
+
+    def validate_image(self, value):
+        if value is not None and not hasattr(value, 'file'):
+            raise serializers.ValidationError("This field should be a file.")
+        return value
+
+    def update(self, instance, validated_data):
+        image = validated_data.pop('image', None)
+
+        if image is not None:
+            instance.image.delete(save=False)  # Delete old image file.
+
+            # Save the new image
+            instance.image.save(image.name, image, save=False)
+
+        # Update other fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+
+        instance.save()
+        return instance
+
 
 class CriminalsSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(write_only=True, required=True)
