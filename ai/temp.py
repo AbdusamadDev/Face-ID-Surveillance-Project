@@ -8,6 +8,7 @@ from datetime import datetime
 import websockets
 from geopy.distance import geodesic
 from imutils.video import VideoStream
+import os
 
 from models import Database
 from path import absolute_path
@@ -33,6 +34,8 @@ class WebSocketManager:
         logging.info(
             f"Registered a {data['state']} client. Total web: {len(self.web_clients)}, apk: {len(self.apk_clients)}"
         )
+        print(str(websocket.path))
+        print(data)
 
     async def unregister(self, websocket):
         if websocket in self.apk_clients:
@@ -227,7 +230,7 @@ async def websocket_server(websocket, path):
     try:
         logging.info("Attempt to connect received.")
         message = await websocket.recv()
-        data = json.loads(message)
+        data = json.loads(message) or None
         await manager.register(websocket, data)
 
         while True:
@@ -242,14 +245,41 @@ async def websocket_server(websocket, path):
         await manager.unregister(websocket)
 
 
+# Function to list all image paths in a specific directory
+def list_image_paths(directory):
+    relative_paths = [os.path.join(directory, f) for f in os.listdir(directory) if
+                      os.path.isfile(os.path.join(directory, f))]
+    absolute_paths = [path.replace('../', host_address + "/", 1) for path in relative_paths]
+    return absolute_paths
+
+
+async def send_image_paths(websocket, path):
+    sent_image_paths = set()
+    while True:
+        current_image_paths = set(list_image_paths("../media/screenshots/suspends/"))
+        new_paths = current_image_paths - sent_image_paths  # Determine new files that haven't been sent
+        if new_paths:
+            await websocket.send(json.dumps(list(new_paths)))
+            sent_image_paths.update(new_paths)
+        await asyncio.sleep(5)
+
+
+async def image_path_server(websocket, path):
+    consumer_task = asyncio.ensure_future(send_image_paths(websocket, path))
+    done, pending = await asyncio.wait([consumer_task], return_when=asyncio.FIRST_COMPLETED)
+    for task in pending:
+        task.cancel()
+
+
+async def main():
+    image_server = await websockets.serve(image_path_server, "0.0.0.0", 5678)
+    ws_server = await websockets.serve(websocket_server, "0.0.0.0", 5000)
+    camera_streams = [await stream.continuous_stream_faces(url) for url in stream.urls]
+    await asyncio.gather(ws_server, image_server, *camera_streams)
+
+
 if __name__ == "__main__":
-    # camera_urls = ["http://192.168.1.152:5000/video"]
     database = Database()
     camera_urls = database.get_camera_urls()
     stream = MainStream(absolute_path + "/criminals/", camera_urls)
-    loop = asyncio.get_event_loop()
-    print("Starting websocket server")
-    loop.run_until_complete(websockets.serve(websocket_server, "0.0.0.0", 5000))
-    print("Websocket server started")
-
-    loop.run_until_complete(stream.multiple_cameras())
+    asyncio.run(main())

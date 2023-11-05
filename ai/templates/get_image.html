@@ -1,39 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
-    <meta charset="UTF-8">
-    <title>Images</title>
+    <title>Browser</title>
+    <script>
+        const wsUri = "ws://192.168.1.132:5678/";  // Replace with your specific server URI
+        const websocket = new WebSocket(wsUri);
+
+        websocket.onmessage = function (event) {
+            const imagePaths = JSON.parse(event.data);
+            console.log("Received image paths: ", imagePaths);
+            // Process the image paths as needed
+        };
+
+        websocket.onerror = function (event) {
+            console.error("WebSocket error observed:", event);
+        };
+
+
+    </script>
 </head>
+
 <body>
-<script>
-    const url = 'ws://localhost:5000/images';
-    let socket = new WebSocket(url);
-
-    socket.onopen = function (e) {
-        console.log("[open] Connection established");
-    };
-
-    socket.onmessage = function (event) {
-        console.log(`[message] Data received from server: ${event.data}`);
-    };
-
-    socket.onclose = function (event) {
-        if (event.wasClean) {
-            console.log(`[close] Connection closed cleanly, code=${event.code} reason=${event.reason}`);
-        } else {
-            // e.g. server process killed or network down
-            console.log('[close] Connection died');
-        }
-        // Try to reconnect in 5 seconds
-        setTimeout(function () {
-            socket = new WebSocket(url);
-        }, 5000);
-    };
-
-    socket.onerror = function (error) {
-        console.error(`[error] ${error.message}`);
-    };
-
-</script>
+<h1>Image GET Client</h1>
 </body>
+
 </html>
