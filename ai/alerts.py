@@ -1,8 +1,7 @@
 from datetime import datetime
 from models import Database
 import json
-import cv2
-import os
+from utils import host_address, save_screenshot
 
 
 class AlertManager:
@@ -18,49 +17,57 @@ class AlertManager:
         time_since_last_alert = (now - last_alert_time).total_seconds()
 
         time_since_last_seen = (
-            now - self.face_last_seen.get(detected_face, datetime.min)
+                now - self.face_last_seen.get(detected_face, datetime.min)
         ).total_seconds()
 
         if time_since_last_seen > 5 and time_since_last_alert > 3:
             await self.send_alert(detected_face, url)
-            self.save_screenshot(detected_face, frame)
+            year, month, day = datetime.now().timetuple()[:3]
+            path = (
+                f"../media/screenshots/criminals/{detected_face}/{year}/{month}/{day}"
+            )
+            image_name = save_screenshot(frame, path=path, camera_url=url)
+            camera_object = self.database.get_camera(url)
+            if camera_object:
+                camera_object = camera_object[0]
+            self.database.insert_records(
+                image=f"{host_address}{image_name[2:]}",
+                date_recorded=datetime.now(),
+                criminal=int(detected_face),
+                camera=camera_object
+            )
             self.last_alert_time[detected_face] = now
 
         self.face_last_seen[detected_face] = now
-
-    def save_screenshot(self, detected_face, frame):
-        year, month, day = datetime.now().timetuple()[:3]
-        path = f"../media/screenshots/{detected_face}/{year}/{month}/{day}"
-        if not os.path.exists(path):
-            os.makedirs(path)
-        filename = (
-            path
-            + f"/{datetime.now().hour}-{datetime.now().minute}-{datetime.now().second}.jpg"
-        )
-        cv2.imwrite(filename, frame)
 
     async def send_alert(self, detected_face, url):
         details = self.database.get_details(detected_face)
         camera = self.database.get_camera(url)
         camera_details = camera or None
-
+        camera_context = {
+            "id": camera_details[0],
+            "name": camera_details[1],
+            "url": camera_details[2],
+            "longitude": camera_details[3],
+            "latitude": camera_details[4],
+            "image": host_address + "/" + camera_details[-1]
+        }
         context = {
             "id": details[0],
-            "first_name": detected_face,
-            "last_name": details[1],
-            "age": details[2],
-            "description": details[-1],
+            "first_name": details[1],
+            "last_name": details[2],
+            "middle_name": details[-1],
+            "age": details[3],
+            "description": details[4],
+            "date_joined": str(details[5]),
             "url": url,
-            "camera": camera_details,
+            "camera": camera_context,
         }
-        location = (40.9983, 71.67257)
-        await self.websocket_manager.broadcast_to_web_clients(
-            json.dumps({"event": "all_clients", "context": context})
-        )   
-        await self.websocket_manager.send_to_nearest_apk_client(
-            message=json.dumps({"event": "nearest_client", "context": context}),
-            location=location,
-        )
-        print("Result in alert manager: \n\n", context)
-        print("Websocket object in Alert Manager:\n\n\n", self.websocket_manager)
 
+        print("Context: ", context)
+        await self.websocket_manager.send_to_all(
+            json.dumps(context)
+        )
+        await self.websocket_manager.send_to_nearest_client(
+            json.dumps(context)
+        )

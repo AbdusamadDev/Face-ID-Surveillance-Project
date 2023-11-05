@@ -6,3 +6,6 @@ cuDNN version == 8.x
 onnxruntime GPU version == 1.15.0
 
 and also first import torch and then import insightface otherwise goes back to CPU
+
+
+temporary token: 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l

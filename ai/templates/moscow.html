@@ -4,7 +4,7 @@
 <head>
     <title>Moscow Client</title>
     <script>
-        const wsNearestClient = new WebSocket('ws://localhost:5000');
+        const wsNearestClient = new WebSocket('ws://192.168.1.132:5000');
         wsNearestClient.onopen = function () {
             wsNearestClient.send(JSON.stringify({ "latitude": 55.7558, "longitude": 37.6176 , "state": "apk"}));
         };

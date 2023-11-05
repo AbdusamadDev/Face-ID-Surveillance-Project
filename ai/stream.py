@@ -7,6 +7,7 @@ from alerts import AlertManager
 from recognition import FaceRecognition
 from train import FaceTrainer
 import websockets
+from utils import save_screenshot
 
 
 class MainStream:
@@ -20,7 +21,7 @@ class MainStream:
         self.alert_manager = AlertManager(self.websocket_manager)
         self.face_recognition = FaceRecognition(self)
 
-    async def detect_and_process_faces(self, frame, start, url):
+    async def detect_and_process_faces(self, frame, url):
         faces = self.face_model.get(frame)
         detected_faces = await asyncio.gather(
             *(self.face_recognition.process_face(face) for face in faces)
@@ -32,13 +33,20 @@ class MainStream:
 
     async def continuous_stream_faces(self, url):
         cap = VideoStream(url).start()
+        screenshot_interval = 5
+        last_screenshot_time = time.time()
         try:
             while True:
                 frame = cap.read()
                 if frame is None:
                     continue
+
                 current_time = time.time()
-                await self.detect_and_process_faces(frame, current_time, url)
+                if current_time - last_screenshot_time >= screenshot_interval:
+                    save_screenshot(frame, path="../media/screenshots/suspends", camera_url=url)
+                    last_screenshot_time = current_time
+
+                await self.detect_and_process_faces(frame, url)
         except (KeyboardInterrupt, websockets.exceptions.ConnectionClosedError):
             logging.info(f"Stream {url} terminated.")
         finally:

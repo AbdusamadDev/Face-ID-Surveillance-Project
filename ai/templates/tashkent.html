@@ -4,7 +4,7 @@
 <head>
   <title>Tashkent Client</title>
   <script>
-    const wsNearestClient = new WebSocket('ws://localhost:5000');
+    const wsNearestClient = new WebSocket('ws://192.168.1.132:5000');
     wsNearestClient.onopen = function () {
       wsNearestClient.send(JSON.stringify({ "latitude": 41.2995, "longitude": 69.2401, "state": "apk" }));
     };

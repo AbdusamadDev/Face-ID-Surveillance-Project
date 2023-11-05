@@ -1,5 +1,3 @@
-import asyncio
-import json
 import logging
 from geopy.distance import geodesic
 
@@ -9,44 +7,63 @@ logging.basicConfig(level=logging.INFO)
 
 class WebSocketManager:
     def __init__(self):
-        self.clients = {}
+        self.web_clients = set()
+        self.apk_clients = set()
+        self.locations = {}
 
-    async def register(self, websocket, location, state):
-        self.clients[websocket] = (location, state)
-        logging.info(f"Client registered. Total clients: {len(self.clients)}.")
+    async def register(self, websocket, data):
+        if data["state"] == "apk":
+            self.apk_clients.add(websocket)
+            self.locations[websocket] = (data["latitude"], data["longitude"])
+        else:
+            self.web_clients.add(websocket)
+        logging.info(
+            f"Registered a {data['state']} client. Total web: {len(self.web_clients)}, apk: {len(self.apk_clients)}"
+        )
+        print(str(websocket.path))
+        print(data)
 
     async def unregister(self, websocket):
-        if websocket in self.clients:
-            del self.clients[websocket]
-            logging.info(f"Client unregistered. Total clients: {len(self.clients)}.")
-        else:
-            logging.warning("Attempted to unregister an unknown client.")
+        if websocket in self.apk_clients:
+            self.apk_clients.remove(websocket)
+            del self.locations[websocket]
+        elif websocket in self.web_clients:
+            self.web_clients.remove(websocket)
+        logging.info(
+            f"Unregistered a client. Remaining web: {len(self.web_clients)}, apk: {len(self.apk_clients)}"
+        )
 
-    async def send_to_nearest_apk_client(self, message, location):
-        nearest_client, _ = self.find_nearest_client(location, client_type="apk")
-        if nearest_client:
-            await nearest_client.send(json.dumps(message))
+    async def send_to_all(self, message):
+        for web_client in self.web_clients:
+            if web_client.open:
+                await web_client.send(message)
 
-    async def broadcast_to_web_clients(self, message):
-        web_clients = [
-            ws for ws, (_, state) in self.clients.items() if state == "web" and ws.open
-        ]
-        if web_clients:
-            await asyncio.gather(
-                *(client.send(json.dumps(message)) for client in web_clients)
-            )
+    async def send_to_nearest_client(self, message):
+        nearest_client, _ = self.find_nearest_client()
+        if nearest_client and nearest_client.open:
+            await nearest_client.send(message)
 
-    def find_nearest_client(self, location, client_type=None):
-        nearest_client = None
+    def find_nearest_client(self):
+        camera_location = (41.0649, 71.4782)
         nearest_distance = float("inf")
-        for client, (client_loc, state) in self.clients.items():
-            if client_type and state != client_type:
+        nearest_client = None
+        for ws, location in self.locations.items():
+            if not isinstance(location, tuple) or len(location) != 2:
+                logging.error(type(location))
+                logging.error(f"Invalid location data: {location}")
                 continue
-            distance = geodesic(location, client_loc).kilometers
+
+            try:
+                lat, long = float(location[0]), float(location[1])
+            except ValueError:
+                logging.error(f"Invalid coordinates: {location}")
+                continue
+
+            location = (lat, long)
+            distance = geodesic(camera_location, location).kilometers
+
             if distance < nearest_distance:
                 nearest_distance = distance
-                nearest_client = client
+                nearest_client = ws
+
         return nearest_client, nearest_distance
-
-
-websocket_manager = WebSocketManager()
