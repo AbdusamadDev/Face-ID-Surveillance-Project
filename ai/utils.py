@@ -16,13 +16,11 @@ def host():
     return public_ip
 
 
-def save_screenshot(frame, path):
+def save_screenshot(frame, camera_url, path):
     if not os.path.exists(path):
         os.makedirs(path)
-    filename = (
-            path
-            + f"/{datetime.now().hour}-{datetime.now().minute}-{datetime.now().second}.jpg"
-    )
+    timestamp = datetime.now().strftime("%Y-%m-%d|%H-%M-%S")
+    filename = f"{path}/{timestamp}|{camera_url.split('/')[2]}.jpg"
     cv2.imwrite(filename, frame)
     return filename
 

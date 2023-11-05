@@ -71,6 +71,27 @@ class Database:
         )
         connection.commit()
 
+    def get_by_similar(self, partial_url):
+        query = """SELECT * FROM api_camera WHERE url ILIKE %s;"""
+        connection = self._db_connect()
+        cursor = connection.cursor()
+
+        # Add '%' wildcard before and after the partial_url to find similar matches
+        like_pattern = f"%{partial_url}%"
+
+        cursor.execute(query, (like_pattern,))
+        results = cursor.fetchall()
+        cursor.close()
+        connection.close()
+        keys = ["id", "name", "url", "longitude", "latitude", "image"]
+        if results:
+            results = results[0]
+        context_zip = list(zip(keys, results))
+        print(context_zip)
+        context = {key: val for key, val in context_zip}
+
+        return context
+
 
 def get_details(first_name):
     connection = psycopg2.connect(
@@ -111,4 +132,4 @@ def get_camera_urls():
 
 if __name__ == "__main__":
     database = Database()
-    database.insert_records(image="sadfsfd", date_recorded=datetime.now(), criminal=128, camera=32)
+    print(database.get_by_similar("192.168.1.152"))

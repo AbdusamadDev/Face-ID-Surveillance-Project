@@ -128,7 +128,7 @@ class AlertManager:
             path = (
                 f"../media/screenshots/criminals/{detected_face}/{year}/{month}/{day}"
             )
-            image_name = save_screenshot(frame, path=path)
+            image_name = save_screenshot(frame, path=path, camera_url=url)
             camera_object = self.database.get_camera(url)
             if camera_object:
                 camera_object = camera_object[0]
@@ -174,9 +174,6 @@ class AlertManager:
             json.dumps(context)
         )
 
-        # camera_location = (41.0000, 71.6682)
-        # await self.websocket_manager.print_client_locations()
-
 
 class MainStream:
     def __init__(self, root_dir, camera_urls):
@@ -211,7 +208,7 @@ class MainStream:
 
                 current_time = time.time()
                 if current_time - last_screenshot_time >= screenshot_interval:
-                    save_screenshot(frame, path="../media/screenshots/suspends")
+                    save_screenshot(frame, path="../media/screenshots/suspends", camera_url=url)
                     last_screenshot_time = current_time
 
                 await self.detect_and_process_faces(frame, url)
@@ -258,12 +255,17 @@ async def send_image_paths(websocket, path):
     while True:
         current_image_paths = set(list_image_paths("../media/screenshots/suspends/"))
         new_paths = current_image_paths - sent_image_paths  # Determine new files that haven't been sent
-        if new_paths:
-            await websocket.send(json.dumps(list(new_paths)))
-            sent_image_paths.update(new_paths)
+        for image_path in new_paths:
+            image_name = os.path.basename(image_path)
+            camera_url = image_name.split('|')[-1].rstrip('.jpg')
+            camera_object = database.get_by_similar(camera_url)
+            message = {"image_path": image_path, "camera_object": camera_object}
+            await websocket.send(json.dumps(message))
+            sent_image_paths.add(image_path)
         await asyncio.sleep(5)
 
 
+# Modify the image_path_server coroutine to pass the database object to send_image_paths
 async def image_path_server(websocket, path):
     consumer_task = asyncio.ensure_future(send_image_paths(websocket, path))
     done, pending = await asyncio.wait([consumer_task], return_when=asyncio.FIRST_COMPLETED)
