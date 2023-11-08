@@ -26,9 +26,7 @@ from api.filters import (
 )
 
 ##################### Standard libraries imports ########################
-from django.utils.timezone import make_aware
-from calendar import monthrange
-from datetime import datetime
+
 from math import ceil
 import shutil
 import pytz
@@ -186,64 +184,11 @@ class UnknownFacesImageView(APIView):
         )
 
 
+# views.py
+
 class FilterAPIView(ModelViewSet):
-    model = CriminalsRecords
     serializer_class = CriminalsRecordsSerializer
     queryset = CriminalsRecords.objects.all()
     pagination_class = CriminalsRecordsPagination
     filterset_class = CriminalsRecordFilter
     http_method_names = ['get', 'head', 'options', "post", "delete"]
-
-    def get_queryset(self):
-        # Helper function to create an aware datetime object
-        def create_aware_datetime(year, month, day, default_tz, end_of_day=False):
-            dt = datetime(year, month, day)
-            if end_of_day:
-                dt = dt.replace(hour=23, minute=59, second=59, microsecond=999999)
-            return make_aware(dt, default_tz)
-
-        # Helper function to determine the last day of a month
-        def last_day_of_month(year, month):
-            return monthrange(year, month)[1]
-
-        # Get query parameters
-        byear = self.request.query_params.get('byear')
-        bmonth = self.request.query_params.get('bmonth')
-        bday = self.request.query_params.get('bday')
-        eyear = self.request.query_params.get('eyear')
-        emonth = self.request.query_params.get('emonth')
-        eday = self.request.query_params.get('eday')
-
-        # Set default timezone
-        default_tz = pytz.timezone('Asia/Karachi')  # Replace with your default timezone
-
-        # Determine the start date
-        if byear:
-            byear = int(byear)
-            bmonth = int(bmonth) if bmonth else 1
-            bday = int(bday) if bday else 1
-            begin_date = create_aware_datetime(byear, bmonth, bday, default_tz)
-        else:
-            begin_date = None
-
-        # Determine the end date
-        if eyear:
-            eyear = int(eyear)
-            emonth = int(emonth) if emonth else 12
-            eday = int(eday) if eday else last_day_of_month(eyear, emonth)
-            end_date = create_aware_datetime(eyear, emonth, eday, default_tz, end_of_day=True)
-        else:
-            end_date = None
-
-        # Filter based on the calculated start and end dates
-        if begin_date and end_date:
-            return self.queryset.filter(date_recorded__gte=begin_date, date_recorded__lte=end_date)
-        elif begin_date:
-            return self.queryset.filter(date_recorded__gte=begin_date)
-        elif end_date:
-            return self.queryset.filter(date_recorded__lte=end_date)
-        else:
-            # If no dates are provided, default to returning all records
-            return self.queryset
-
-# 939110925

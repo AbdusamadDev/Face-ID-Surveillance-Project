@@ -273,16 +273,27 @@ def list_image_paths(directory):
 
 async def send_image_paths(websocket, path):
     sent_image_paths = set()
+    connection_time = datetime.now()  # Capture the connection time when the coroutine starts
+    screenshots_dir = "../media/screenshots/suspends/"  # Directory where screenshots are stored
+
     while True:
-        current_image_paths = set(list_image_paths("../media/screenshots/suspends/"))
-        new_paths = current_image_paths - sent_image_paths  # Determine new files that haven't been sent
-        for image_path in new_paths:
-            image_name = os.path.basename(image_path)
-            camera_url = image_name.split('|')[-1].rstrip('.jpg')
-            camera_object = database.get_by_similar(camera_url)
-            message = {"image_path": image_path, "camera_object": camera_object}
-            await websocket.send(json.dumps(message))
-            sent_image_paths.add(image_path)
+        current_image_files = set(f for f in os.listdir(screenshots_dir) if os.path.isfile(os.path.join(screenshots_dir, f)))
+        current_image_paths = {os.path.join(screenshots_dir, f) for f in current_image_files}
+        new_paths = current_image_paths - sent_image_paths
+        for file_path in new_paths:
+            # Get the creation time of the image file using the file system path
+            creation_time = datetime.fromtimestamp(os.path.getctime(file_path))
+            # Only send the image if it was created after the client connected
+            if creation_time > connection_time:
+                image_name = os.path.basename(file_path)
+                camera_url = image_name.split('|')[-1].rstrip('.jpg')
+                camera_object = database.get_by_similar(camera_url)
+                # Convert the file system path to a URL before sending
+                image_url = file_path.replace('../', host_address + "/", 1)
+                message = {"image_path": image_url, "camera_object": camera_object}
+                print("This is the message meant to be sent: ", message)
+                await websocket.send(json.dumps(message))
+                sent_image_paths.add(file_path)
         await asyncio.sleep(5)
 
 

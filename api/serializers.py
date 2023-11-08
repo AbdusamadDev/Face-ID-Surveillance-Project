@@ -70,8 +70,10 @@ class CriminalsSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super(CriminalsSerializer, self).__init__(*args, **kwargs)
-        if self.context["request"].method in ["PATCH"]:
-            for field in self.fields.values():
+
+        # Make all fields not required if the request method is PATCH
+        if self.context.get('request', None) and self.context['request'].method == 'PATCH':
+            for field_name, field in self.fields.items():
                 field.required = False
                 print(field)
 
@@ -138,6 +140,8 @@ class CriminalsSerializer(serializers.ModelSerializer):
 
 
 class CriminalsRecordsSerializer(serializers.ModelSerializer):
+    criminal = CriminalsSerializer(read_only=True)
+    camera = CameraSerializer(read_only=True)
     class Meta:
         fields = "__all__"
         model = CriminalsRecords

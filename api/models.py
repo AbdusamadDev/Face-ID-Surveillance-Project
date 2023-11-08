@@ -26,13 +26,13 @@ class Criminals(models.Model):
         indexes = [models.Index(fields=["first_name", "last_name", "age"])]
 
 
-class Encodings(models.Model):
-    criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE)
-    encoding = ArrayField(models.FloatField())
-
-
 class CriminalsRecords(models.Model):
     criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE, default=1)
     camera = models.ForeignKey(to=Camera, on_delete=models.CASCADE, default=1)
     image_path = models.URLField(default="https://www.youtube.com")
     date_recorded = models.DateTimeField(auto_now_add=True)
+
+
+class Encodings(models.Model):
+    criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE)
+    encoding = ArrayField(models.FloatField())
