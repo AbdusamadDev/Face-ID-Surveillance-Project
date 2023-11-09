@@ -180,6 +180,7 @@ class AlertManager:
             "age": details[3],
             "description": details[4],
             "date_joined": str(details[5]),
+            "image": host_address + "/media/criminals/" + str(details[0]) + "/main.jpg",
             "url": url,
             "camera": camera_context,
         }
@@ -196,6 +197,7 @@ class AlertManager:
 
 class MainStream:
     def __init__(self, root_dir, camera_urls):
+        self.database = Database()
         self.websocket_manager = WebSocketManager()
         self.urls = camera_urls
         self.trainer = FaceTrainer(root_dir)
@@ -237,8 +239,16 @@ class MainStream:
             cap.stop()
 
     async def multiple_cameras(self):
-        tasks = [self.continuous_stream_faces(url) for url in self.urls]
-        await asyncio.gather(*tasks)
+        while True:
+            current_urls = self.database.get_camera_urls()
+            if set(current_urls) != set(self.urls):
+                self.urls = current_urls
+                logging.info("Camera URLs updated.")
+                break
+
+            tasks = [self.continuous_stream_faces(url) for url in self.urls]
+            await asyncio.gather(*tasks)
+            await asyncio.sleep(5)
 
 
 async def websocket_server(websocket, path):
@@ -273,22 +283,20 @@ def list_image_paths(directory):
 
 async def send_image_paths(websocket, path):
     sent_image_paths = set()
-    connection_time = datetime.now()  # Capture the connection time when the coroutine starts
-    screenshots_dir = "../media/screenshots/suspends/"  # Directory where screenshots are stored
+    connection_time = datetime.now()
+    screenshots_dir = "../media/screenshots/suspends/"
 
     while True:
-        current_image_files = set(f for f in os.listdir(screenshots_dir) if os.path.isfile(os.path.join(screenshots_dir, f)))
+        current_image_files = set(
+            f for f in os.listdir(screenshots_dir) if os.path.isfile(os.path.join(screenshots_dir, f)))
         current_image_paths = {os.path.join(screenshots_dir, f) for f in current_image_files}
         new_paths = current_image_paths - sent_image_paths
         for file_path in new_paths:
-            # Get the creation time of the image file using the file system path
             creation_time = datetime.fromtimestamp(os.path.getctime(file_path))
-            # Only send the image if it was created after the client connected
             if creation_time > connection_time:
                 image_name = os.path.basename(file_path)
                 camera_url = image_name.split('|')[-1].rstrip('.jpg')
                 camera_object = database.get_by_similar(camera_url)
-                # Convert the file system path to a URL before sending
                 image_url = file_path.replace('../', host_address + "/", 1)
                 message = {"image_path": image_url, "camera_object": camera_object}
                 print("This is the message meant to be sent: ", message)
@@ -297,7 +305,6 @@ async def send_image_paths(websocket, path):
         await asyncio.sleep(5)
 
 
-# Modify the image_path_server coroutine to pass the database object to send_image_paths
 async def image_path_server(websocket, path):
     consumer_task = asyncio.ensure_future(send_image_paths(websocket, path))
     done, pending = await asyncio.wait([consumer_task], return_when=asyncio.FIRST_COMPLETED)

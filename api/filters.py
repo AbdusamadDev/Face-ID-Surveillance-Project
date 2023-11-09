@@ -20,11 +20,14 @@ class CriminalsRecordFilter(filters.FilterSet):
     eday = filters.NumberFilter(field_name="date_recorded__day", lookup_expr='exact')
     emonth = filters.NumberFilter(field_name="date_recorded__month", lookup_expr='exact')
     eyear = filters.NumberFilter(field_name="date_recorded__year", lookup_expr='exact')
+    ehour = filters.NumberFilter(field_name="date_recorded__hour", lookup_expr='exact')
+    eminute = filters.NumberFilter(field_name="date_recorded__minute", lookup_expr='exact')
+    esecond = filters.NumberFilter(field_name="date_recorded__second", lookup_expr='exact')
 
     class Meta:
         model = CriminalsRecords
         fields = {
-            'date_recorded': ['exact', 'year', 'month', 'day', 'gte', 'lte'],
+            'date_recorded': ['exact', 'year', 'month', 'day', 'hour', 'minute', 'second', 'gte', 'lte'],
             'criminal__first_name': ['exact', 'icontains'],
             'criminal__last_name': ['exact', 'icontains'],
             'criminal__age': ['exact', 'gte', 'lte'],

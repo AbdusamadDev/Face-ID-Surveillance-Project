@@ -142,6 +142,7 @@ class CriminalsSerializer(serializers.ModelSerializer):
 class CriminalsRecordsSerializer(serializers.ModelSerializer):
     criminal = CriminalsSerializer(read_only=True)
     camera = CameraSerializer(read_only=True)
+
     class Meta:
         fields = "__all__"
         model = CriminalsRecords

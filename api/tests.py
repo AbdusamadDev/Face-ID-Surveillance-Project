@@ -1,4 +1,6 @@
-# from typing import List
+from typing import List
+
+
 #
 #
 # class Solution:
@@ -50,24 +52,40 @@
 # print(sl.isPalindrome(587767785))
 #
 #
+# from itertools import zip_longest
+# import logging
+#
+# logging.basicConfig(level=logging.INFO)
+#
+#
+# class Solution:
+#     def is_the_same(self, tpl: tuple):
+#         return len(set(tpl)) == 1
+#
+#     def longestCommonPrefix(self, strs: List[str]) -> str:
+#         if not strs:
+#             return ""
+#         if len(strs) == 1:
+#             return strs[0]
+#
+#         result = ""
+#         target = list(zip_longest(*(list(word) for word in strs)))
+#         for word in target:
+#             if self.is_the_same(word):
+#                 result += word[0]
+#             else:
+#                 return result
+#         return result
+#
+#
+# sl = Solution()
+# logging.info(sl.longestCommonPrefix(["flower", "flower", "flower", "flower"]))
+
+
 class Solution:
-    def romanToInt(self, s: str) -> int:
-        lookup = {
-            "I": 1,
-            "V": 5,
-            "X": 10,
-            "L": 50,
-            "C": 100,
-            "D": 500,
-            "M": 1000,
-        }
-        result = 0
-        for i in s:
-            result += lookup[i]
-        return result
+    def isValid(self, s: str) -> bool:
+        pass
 
-
-num = "MMCMXCIX"
 
 sl = Solution()
-print(sl.romanToInt(num))
+print(sl.isValid("{[{{[]}()}]}{}]}"))
