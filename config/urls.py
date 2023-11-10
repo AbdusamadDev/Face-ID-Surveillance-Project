@@ -10,6 +10,7 @@ router = DefaultRouter()
 router.register(r"criminals", CriminalsAPIView)
 router.register(r"camera", CameraAPIView)
 router.register(r"records", FilterAPIView)
+router.register(r"filters/generic", GenericFilterAPIView)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

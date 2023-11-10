@@ -87,7 +87,6 @@ class Database:
         if results:
             results = results[0]
         context_zip = list(zip(keys, results))
-        print(context_zip)
         context = {key: val for key, val in context_zip}
 
         return context

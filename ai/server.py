@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 import time
 import tracemalloc
 from datetime import datetime
@@ -16,7 +15,6 @@ from train import FaceTrainer
 from utils import save_screenshot, host_address
 
 tracemalloc.start()
-logging.basicConfig(level=logging.INFO)
 
 
 class WebSocketManager:
@@ -31,38 +29,21 @@ class WebSocketManager:
             self.locations[websocket] = (data["latitude"], data["longitude"])
         else:
             self.web_clients.add(websocket)
-        logging.info(
-            f"Registered a {data['state']} client. Total web: {len(self.web_clients)}, apk: {len(self.apk_clients)}"
-        )
-        print(str(websocket.path))
-        print(data)
 
     async def unregister(self, websocket):
         # Removing the websocket and updating locations if it's an APK client
         if websocket in self.apk_clients:
             self.apk_clients.remove(websocket)
             del self.locations[websocket]
-            print("Available locations: ", self.locations)
-            print(f"APK client unregistered: {websocket}")
         elif websocket in self.web_clients:
             self.web_clients.remove(websocket)
-            print(f"Web client unregistered: {websocket}")
-        else:
-            print(f"Client was not recognized: {websocket}")
-        logging.info(f"Unregistered a client. Remaining web: {len(self.web_clients)}, apk: {len(self.apk_clients)}")
 
     async def send_to_nearest_client(self, message, camera_location):
-        print("THE LOCATIONS ARE ", self.locations)
         self.refresh_clients()
         nearest_client, _ = self.find_nearest_client(camera_location)
         if nearest_client:
             if nearest_client.open:
                 await nearest_client.send(message)
-                print(f"Message sent to nearest client: {nearest_client}")
-            else:
-                print(f"Nearest client connection is closed: {nearest_client}")
-        else:
-            print("No nearest client found to send the message.")
 
     async def send_to_all(self, message):
         for web_client in self.web_clients:
@@ -74,14 +55,11 @@ class WebSocketManager:
         nearest_client = None
         for ws, location in self.locations.items():
             if not isinstance(location, tuple) or len(location) != 2:
-                logging.error(type(location))
-                logging.error(f"Invalid location data: {location}")
                 continue
 
             try:
                 lat, long = float(location[0]), float(location[1])
             except ValueError:
-                logging.error(f"Invalid coordinates: {location}")
                 continue
 
             location = (lat, long)
@@ -97,8 +75,6 @@ class WebSocketManager:
         for ws in list(self.apk_clients):
             if not ws.open:
                 self.apk_clients.remove(ws)
-        print(self.web_clients)
-        print(self.apk_clients)
 
 
 class FaceRecognition:
@@ -170,7 +146,7 @@ class AlertManager:
             "url": camera_details[2],
             "longitude": camera_details[3],
             "latitude": camera_details[4],
-            "image": host_address + "/" + camera_details[-1]
+            "image": host_address + "/media/" + camera_details[-1]
         }
         context = {
             "id": details[0],
@@ -185,7 +161,6 @@ class AlertManager:
             "camera": camera_context,
         }
 
-        print("Context: ", context)
         await self.websocket_manager.send_to_all(
             json.dumps(context)
         )
@@ -234,7 +209,7 @@ class MainStream:
 
                 await self.detect_and_process_faces(frame, url)
         except (KeyboardInterrupt, websockets.exceptions.ConnectionClosedError):
-            logging.info(f"Stream {url} terminated.")
+            print("Connection closed")
         finally:
             cap.stop()
 
@@ -243,7 +218,6 @@ class MainStream:
             current_urls = self.database.get_camera_urls()
             if set(current_urls) != set(self.urls):
                 self.urls = current_urls
-                logging.info("Camera URLs updated.")
                 break
 
             tasks = [self.continuous_stream_faces(url) for url in self.urls]
@@ -254,7 +228,6 @@ class MainStream:
 async def websocket_server(websocket, path):
     manager = stream.websocket_manager
     try:
-        logging.info("Attempt to connect received.")
         message = await websocket.recv()
         data = json.loads(message) or None
         await manager.register(websocket, data)
@@ -265,10 +238,8 @@ async def websocket_server(websocket, path):
 
     except websockets.exceptions.ConnectionClosedError as e:
         await manager.unregister(websocket)
-        logging.error(f"Connection closed: {e}")
     except json.JSONDecodeError as e:
         await manager.unregister(websocket)
-        logging.error(f"JSON decode error: {e}")
     finally:
         await manager.unregister(websocket)
 
@@ -298,8 +269,9 @@ async def send_image_paths(websocket, path):
                 camera_url = image_name.split('|')[-1].rstrip('.jpg')
                 camera_object = database.get_by_similar(camera_url)
                 image_url = file_path.replace('../', host_address + "/", 1)
+                camera_object["image"] = host_address + "/media/" + camera_object.get("image")
+                print(camera_object["image"])
                 message = {"image_path": image_url, "camera_object": camera_object}
-                print("This is the message meant to be sent: ", message)
                 await websocket.send(json.dumps(message))
                 sent_image_paths.add(file_path)
         await asyncio.sleep(5)

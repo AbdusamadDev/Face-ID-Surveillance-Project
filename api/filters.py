@@ -1,7 +1,32 @@
-import django_filters
 from django_filters import rest_framework as filters
-from api.models import Camera, Criminals
-from .models import CriminalsRecords
+from django.db.models import Q
+import django_filters
+
+from api.models import CriminalsRecords, Camera, Criminals
+
+
+class GenericFilter(filters.FilterSet):
+    search = filters.CharFilter(method='filter_search')
+
+    def filter_search(self, queryset, name, value):
+        return queryset.filter(
+            Q(criminal__first_name__icontains=value) |
+            Q(criminal__last_name__icontains=value) |
+            Q(criminal__age__icontains=value) |
+            Q(camera__name__icontains=value) |
+            Q(image_path__icontains=value)
+        )
+
+    class Meta:
+        model = CriminalsRecords
+        fields = {
+            'date_recorded': ['exact', 'year', 'month', 'day', 'hour', 'minute', 'second', 'gte', 'lte'],
+            'criminal__first_name': ['exact', 'icontains'],
+            'criminal__last_name': ['exact', 'icontains'],
+            'criminal__age': ['exact', 'gte', 'lte'],
+            'camera__name': ['exact', 'icontains'],
+            'image_path': ['exact', 'icontains'],
+        }
 
 
 class CameraFilter(django_filters.FilterSet):

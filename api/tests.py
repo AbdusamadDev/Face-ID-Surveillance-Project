@@ -1,6 +1,5 @@
 from typing import List
 
-
 #
 #
 # class Solution:
@@ -80,12 +79,34 @@ from typing import List
 #
 # sl = Solution()
 # logging.info(sl.longestCommonPrefix(["flower", "flower", "flower", "flower"]))
+import time
 
+
+# class Solution:
+#         def isValid(self, s: str) -> bool:
+#             while '()' in s or '[]' in s or '{}' in s:
+#                 s = s.replace('()', '').replace('[]', '').replace('{}', '')
+#             return False if len(s) != 0 else True
+#
+# sl = Solution()
+# print(sl.isValid("{[]{}{{{{}}}{}{}(()))}{}}"))
+# print(sorted(""))
 
 class Solution:
-    def isValid(self, s: str) -> bool:
-        pass
+    def removeDuplicates(self, nums: List[int]) -> int:
+        if len(nums) not in range(1, (3 * (10 ** 4))):
+            return 0
+        for i in nums:
+            if i not in range(-100, 100):
+                print(i)
+                return 0
+        sorted_nums = nums.sort()
+        if sorted_nums != nums:
+            print(sorted_nums)
+            print(nums)
+            return 0
+        return len(nums) - len(list(set(nums)))
 
 
 sl = Solution()
-print(sl.isValid("{[{{[]}()}]}{}]}"))
+print(sl.removeDuplicates([5, 5, 5, 5, 7, 9, 10, 11]))
