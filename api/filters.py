@@ -1,11 +1,49 @@
 from django_filters import rest_framework as filters
 from django.db.models import Q
-import django_filters
 
 from api.models import CriminalsRecords, Camera, Criminals
 
 
-class GenericFilter(filters.FilterSet):
+class CameraFilter(filters.FilterSet):
+    search = filters.CharFilter(method='filter_search')
+
+    def filter_search(self, queryset, name, value):
+        return queryset.filter(
+            Q(name__icontains=value) |
+            Q(url__icontains=value)
+        )
+
+    class Meta:
+        model = Camera
+        fields = {
+            "name": ["exact", "icontains"],
+            "url": ["exact", "icontains"],
+            "longitude": ["exact", "icontains"],
+            "latitude": ["exact", "icontains", "gte", "lte"],
+        }
+
+
+class CriminalsFilter(filters.FilterSet):
+    search = filters.CharFilter(method='filter_search')
+
+    def filter_search(self, queryset, name, value):
+        return queryset.filter(
+            Q(first_name__icontains=value) |
+            Q(last_name__icontains=value) |
+            Q(age__icontains=value) |
+            Q(description__icontains=value)
+        )
+
+    class Meta:
+        model = Criminals
+        fields = {
+            'first_name': ['exact', 'icontains'],
+            'last_name': ['exact', 'icontains'],
+            'age': ['exact', 'gte', 'lte'],
+        }
+
+
+class CriminalsRecordFilter(filters.FilterSet):
     search = filters.CharFilter(method='filter_search')
 
     def filter_search(self, queryset, name, value):
@@ -26,34 +64,4 @@ class GenericFilter(filters.FilterSet):
             'criminal__age': ['exact', 'gte', 'lte'],
             'camera__name': ['exact', 'icontains'],
             'image_path': ['exact', 'icontains'],
-        }
-
-
-class CameraFilter(django_filters.FilterSet):
-    class Meta:
-        model = Camera
-        fields = ["name", "longitude", "latitude", "id"]
-
-
-class CriminalsFilter(django_filters.FilterSet):
-    class Meta:
-        model = Criminals
-        fields = ["first_name", "last_name", "age", "date_created"]
-
-
-class CriminalsRecordFilter(filters.FilterSet):
-    eday = filters.NumberFilter(field_name="date_recorded__day", lookup_expr='exact')
-    emonth = filters.NumberFilter(field_name="date_recorded__month", lookup_expr='exact')
-    eyear = filters.NumberFilter(field_name="date_recorded__year", lookup_expr='exact')
-    ehour = filters.NumberFilter(field_name="date_recorded__hour", lookup_expr='exact')
-    eminute = filters.NumberFilter(field_name="date_recorded__minute", lookup_expr='exact')
-    esecond = filters.NumberFilter(field_name="date_recorded__second", lookup_expr='exact')
-
-    class Meta:
-        model = CriminalsRecords
-        fields = {
-            'date_recorded': ['exact', 'year', 'month', 'day', 'hour', 'minute', 'second', 'gte', 'lte'],
-            'criminal__first_name': ['exact', 'icontains'],
-            'criminal__last_name': ['exact', 'icontains'],
-            'criminal__age': ['exact', 'gte', 'lte'],
         }

@@ -1,11 +1,12 @@
-############### Django and Django Rest Framework imports ################
+#  ############## Django and Django Rest Framework imports ################
 from django.http import JsonResponse
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.request import HttpRequest
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework import status
 
-########################## Local apps imports ###########################
+#  ######################### Local apps imports ###########################
 from api.models import Camera, Criminals, CriminalsRecords
 from api.utils import host_address
 from api.pagination import (
@@ -22,14 +23,11 @@ from api.filters import (
     CriminalsRecordFilter,
     CriminalsFilter,
     CameraFilter,
-    GenericFilter
 )
 
-##################### Standard libraries imports ########################
-
+#  #################### Standard libraries imports ########################
 from math import ceil
 import shutil
-import pytz
 import time
 import os
 
@@ -184,18 +182,9 @@ class UnknownFacesImageView(APIView):
         )
 
 
-# views.py
-
-class FilterAPIView(ModelViewSet):
+class CriminalsRecordsAPIView(ModelViewSet):
     serializer_class = CriminalsRecordsSerializer
     queryset = CriminalsRecords.objects.all().order_by("-date_recorded")
     pagination_class = CriminalsRecordsPagination
     filterset_class = CriminalsRecordFilter
     http_method_names = ['get', 'head', 'options', "post", "delete"]
-
-
-class GenericFilterAPIView(ModelViewSet):
-    serializer_class = CriminalsRecordsSerializer
-    pagination_class = CriminalsRecordsPagination
-    queryset = CriminalsRecords.objects.all()
-    filterset_class = GenericFilter

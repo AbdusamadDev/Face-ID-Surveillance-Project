@@ -160,7 +160,6 @@ class AlertManager:
             "url": url,
             "camera": camera_context,
         }
-
         await self.websocket_manager.send_to_all(
             json.dumps(context)
         )
@@ -168,6 +167,7 @@ class AlertManager:
             json.dumps(context),
             camera_location=(camera_context["longitude"], camera_context["latitude"])
         )
+        print(context)
 
 
 class MainStream:
@@ -270,7 +270,6 @@ async def send_image_paths(websocket, path):
                 camera_object = database.get_by_similar(camera_url)
                 image_url = file_path.replace('../', host_address + "/", 1)
                 camera_object["image"] = host_address + "/media/" + camera_object.get("image")
-                print(camera_object["image"])
                 message = {"image_path": image_url, "camera_object": camera_object}
                 await websocket.send(json.dumps(message))
                 sent_image_paths.add(file_path)
