@@ -37,7 +37,7 @@ class CameraAPIView(ModelViewSet):
 
     model = Camera
     serializer_class = CameraSerializer
-    queryset = Camera.objects.all().order_by("name")
+    queryset = Camera.objects.all().order_by("-id")
     lookup_field = "pk"
     filterset_class = CameraFilter
     pagination_class = CameraPagination

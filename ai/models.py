@@ -1,7 +1,6 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
-from datetime import datetime
 
 load_dotenv()
 
@@ -38,15 +37,27 @@ class Database:
             conn.close()
             return None
 
-    def get_details(self, first_name):
+    def get_details(self, employee_id):
         query = "SELECT * FROM api_criminals WHERE id=%s"
-        rows = self._execute_query(query, (first_name,))
-        return rows[0] if rows else []
+        rows = self._execute_query(query, (employee_id,))  # Changed parameter name to 'employee_id' for clarity
+        labels = ["id", "first_name", "last_name", "age", "description", "date_created", "middle_name"]
+        if rows is not None:
+            try:
+                rows_dict = {label: row for label, row in zip(labels, rows[0])}
+                print(rows_dict)
+                return rows_dict
+            except:
+                print(rows)
+        return None
 
     def get_camera(self, url):
         query = "SELECT * FROM api_camera WHERE url=%s"
         rows = self._execute_query(query, (url,))
-        return rows[0] if rows else []
+        labels = ["id", "name", "url", "longitude", "latitude", "image"]
+        if rows is not None:
+            rows_dict = {label: row for label, row in zip(labels, rows[0])}
+            return rows_dict
+        return None
 
     def get_camera_urls(self):
         query = "SELECT url FROM api_camera"

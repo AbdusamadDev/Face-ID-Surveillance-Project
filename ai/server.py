@@ -1,20 +1,20 @@
 import asyncio
 import json
-import time
 import tracemalloc
 from datetime import datetime
-
+import logging
 import websockets
 from geopy.distance import geodesic
 from imutils.video import VideoStream
 import os
 
 from models import Database
-from path import absolute_path
+from path import abs_path
 from train import FaceTrainer
 from utils import save_screenshot, host_address
 
 tracemalloc.start()
+logging.basicConfig(level=logging.DEBUG)
 
 
 class WebSocketManager:
@@ -125,7 +125,7 @@ class AlertManager:
             image_name = save_screenshot(frame, path=path, camera_url=url)
             camera_object = self.database.get_camera(url)
             if camera_object:
-                camera_object = camera_object[0]
+                camera_object = camera_object.get("id")
             self.database.insert_records(
                 image=f"{host_address}{image_name[2:]}",
                 date_recorded=datetime.now(),
@@ -139,39 +139,22 @@ class AlertManager:
     async def send_alert(self, detected_face, url):
         details = self.database.get_details(detected_face)
         camera = self.database.get_camera(url)
-        camera_details = camera or None
-        camera_context = {
-            "id": camera_details[0],
-            "name": camera_details[1],
-            "url": camera_details[2],
-            "longitude": camera_details[3],
-            "latitude": camera_details[4],
-            "image": host_address + "/media/" + camera_details[-1]
-        }
-        context = {
-            "id": details[0],
-            "first_name": details[1],
-            "last_name": details[2],
-            "middle_name": details[-1],
-            "age": details[3],
-            "description": details[4],
-            "date_joined": str(details[5]),
-            "image": host_address + "/media/criminals/" + str(details[0]) + "/main.jpg",
-            "url": url,
-            "camera": camera_context,
-        }
+        camera["image"] = host_address + "/media/" + camera.get("image")
+        details["date_created"] = str(details.get('date_created'))
+        details["image"] = host_address + "/media/criminals/" + str(detected_face) + "/" + "main.jpg"
         await self.websocket_manager.send_to_all(
-            json.dumps(context)
+            json.dumps({"identity": details, "camera": camera})
         )
         await self.websocket_manager.send_to_nearest_client(
-            json.dumps(context),
-            camera_location=(camera_context["longitude"], camera_context["latitude"])
+            json.dumps({"identity": details, "camera": camera}),
+            camera_location=(camera["longitude"], camera["latitude"])
         )
-        print(context)
+        print({"identity": details, "camera": camera})
 
 
 class MainStream:
     def __init__(self, root_dir, camera_urls):
+        self.root_dir = root_dir
         self.database = Database()
         self.websocket_manager = WebSocketManager()
         self.urls = camera_urls
@@ -181,48 +164,54 @@ class MainStream:
         self.face_model = self.trainer.face_model
         self.alert_manager = AlertManager(self.websocket_manager)
         self.face_recognition = FaceRecognition(self)
+        self.processing_queue = asyncio.Queue()  # Queue for processing frames
 
-    async def detect_and_process_faces(self, frame, url):
-        faces = self.face_model.get(frame)
-        detected_faces = await asyncio.gather(
-            *(self.face_recognition.process_face(face) for face in faces)
-        )
-        detected_faces = set(filter(None, detected_faces))
-
-        for result in detected_faces:
-            await self.alert_manager.handle_alert(result, frame, url)
-
-    async def continuous_stream_faces(self, url):
+    async def capture_and_send_frames(self, url):
+        """ Captures frames and sends them to the processing queue. """
         cap = VideoStream(url).start()
-        screenshot_interval = 5  # Interval to take a screenshot in seconds
-        last_screenshot_time = time.time()
-        try:
-            while True:
-                frame = cap.read()
-                if frame is None:
-                    continue
-
-                current_time = time.time()
-                if current_time - last_screenshot_time >= screenshot_interval:
-                    save_screenshot(frame, path="../media/screenshots/suspends", camera_url=url)
-                    last_screenshot_time = current_time
-
-                await self.detect_and_process_faces(frame, url)
-        except (KeyboardInterrupt, websockets.exceptions.ConnectionClosedError):
-            print("Connection closed")
-        finally:
-            cap.stop()
-
-    async def multiple_cameras(self):
         while True:
-            current_urls = self.database.get_camera_urls()
-            if set(current_urls) != set(self.urls):
-                self.urls = current_urls
-                break
+            frame = cap.read()
+            if frame is not None:
+                await self.processing_queue.put((frame, url))
+            await asyncio.sleep(0.1)
 
-            tasks = [self.continuous_stream_faces(url) for url in self.urls]
-            await asyncio.gather(*tasks)
-            await asyncio.sleep(5)
+    async def process_frames(self):
+        """ Processes frames from all cameras. """
+        while True:
+            frame, url = await self.processing_queue.get()
+            self.face_recognition.current_frame = frame
+            faces = self.face_model.get(frame)
+            tasks = [self.face_recognition.process_face(face) for face in faces]
+            results = await asyncio.gather(*tasks)
+            for name in results:
+                if name is not None:
+                    await self.alert_manager.handle_alert(frame=frame, detected_face=name, url=url)
+
+    async def reload_face_encodings_periodically(self):
+        while True:
+            print("Reloading face encodings...")
+            self.index, self.known_face_names = self.trainer.load_face_encodings(self.root_dir)
+            self.face_recognition.index, self.face_recognition.known_face_names = self.trainer.load_face_encodings(
+                self.root_dir)
+            print("Length of face encodings: ", len(self.face_recognition.known_face_names))
+            await self.update_camera_streams()
+            await asyncio.sleep(10)
+
+    async def start_camera_streams(self):
+        """Start frame capture tasks for all cameras and the central processing task."""
+        tasks = [asyncio.create_task(self.capture_and_send_frames(url)) for url in self.urls]
+        tasks.append(asyncio.create_task(self.process_frames()))
+        await asyncio.gather(*tasks)
+
+    async def update_camera_streams(self):
+        new_urls = self.database.get_camera_urls()
+        added_urls = set(new_urls) - set(self.urls)
+
+        if added_urls:
+            print(f"New cameras added: {added_urls}")
+            for url in added_urls:
+                asyncio.create_task(self.capture_and_send_frames(url))
+            self.urls.extend(added_urls)
 
 
 async def websocket_server(websocket, path):
@@ -284,14 +273,19 @@ async def image_path_server(websocket, path):
 
 
 async def main():
-    image_server = await websockets.serve(image_path_server, "0.0.0.0", 5678)
     ws_server = await websockets.serve(websocket_server, "0.0.0.0", 5000)
-    camera_streams = [await stream.continuous_stream_faces(url) for url in stream.urls]
-    await asyncio.gather(ws_server, image_server, *camera_streams)
+    camera_streams_task = asyncio.create_task(stream.start_camera_streams())
+    reload_encodings_task = asyncio.create_task(stream.reload_face_encodings_periodically())
+    await asyncio.gather(
+        ws_server.wait_closed(),
+        camera_streams_task,
+        reload_encodings_task,  # Include the new task here
+    )
 
 
 if __name__ == "__main__":
     database = Database()
-    camera_urls = database.get_camera_urls()
-    stream = MainStream(absolute_path + "/criminals/", camera_urls)
+    urls = database.get_camera_urls()
+    stream = MainStream(abs_path() + "media/criminals", urls)
+    logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
