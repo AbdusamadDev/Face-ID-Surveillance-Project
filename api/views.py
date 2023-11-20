@@ -71,8 +71,14 @@ class CriminalsAPIView(ModelViewSet):
         serializer = self.serializer_class(
             instance, data=request.data, partial=True, context={"request": request}
         )
-
         serializer.is_valid(raise_exception=True)
+        path = os.path.join("media", "criminals", kwargs.get('pk'))
+        image = serializer.validated_data.get("image")
+        if image:
+            if os.path.exists(path):
+                print("Path: ", path)
+                shutil.rmtree(path)
+
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
