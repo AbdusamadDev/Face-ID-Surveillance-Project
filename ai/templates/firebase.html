@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Firebase Notification Example</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-messaging.js"></script>
+    <script>
+        import { initializeApp } from "firebase/app";
+        import { getAnalytics } from "firebase/analytics";
+        const firebaseConfig = {
+        apiKey: "AIzaSyCvQWulVPwycFa_nokjqSr90CWSNqEVv50",
+        authDomain: "bazaarsurvellianceproject.firebaseapp.com",
+        projectId: "bazaarsurvellianceproject",
+        storageBucket: "bazaarsurvellianceproject.appspot.com",
+        messagingSenderId: "274094142604",
+        appId: "1:274094142604:web:dc8d3b065b98e26765b7a9",
+        measurementId: "G-DC5LLZJ1K5"
+        };
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+    </script>
+</head>
+<body>
+    <h1>Firebase Notification Client</h1>
+    <p>This page will request permission for notifications and display any messages received.</p>
+</body>
+</html>

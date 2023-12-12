@@ -49,8 +49,23 @@ class AlertManager:
         await self.websocket_manager.send_to_all(
             json.dumps({"identity": details, "camera": camera})
         )
-        await self.websocket_manager.send_to_nearest_client(
-            json.dumps({"identity": details, "camera": camera}),
-            camera_location=(camera["longitude"], camera["latitude"])
-        )
         print({"identity": details, "camera": camera})
+        await self.broadcast_to_firebase_clients(details, camera)
+
+    # async def broadcast_to_firebase_clients(self, details, camera):
+    #     # Define the notification message
+    #     message = messaging.Message(
+    #         notification=messaging.Notification(
+    #             title="Alert: Detected Face",
+    #             body=f"Face detected: {details['name']}"  # Adjust the message details as needed
+    #         ),
+    #         data={
+    #             "identity": json.dumps(details),
+    #             "camera": json.dumps(camera)
+    #         },
+    #         topic="your-topic-name"  # Use a specific topic that clients subscribe to
+    #     )
+
+    #     # Send the message
+    #     response = messaging.send(message)
+    #     print('Successfully sent message:', response)

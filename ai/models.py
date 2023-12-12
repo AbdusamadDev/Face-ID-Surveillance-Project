@@ -39,7 +39,7 @@ class Database:
 
     def get_details(self, employee_id):
         query = "SELECT * FROM api_criminals WHERE id=%s"
-        rows = self._execute_query(query, (employee_id,))  # Changed parameter name to 'employee_id' for clarity
+        rows = self._execute_query(query, (employee_id,))
         labels = ["id", "first_name", "last_name", "age", "description", "date_created", "middle_name"]
         if rows is not None:
             try:
