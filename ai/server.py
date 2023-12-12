@@ -4,7 +4,9 @@ import tracemalloc
 from datetime import datetime
 import logging
 import websockets
+from urllib.parse import urlparse
 from imutils.video import VideoStream
+import cv2
 import os
 
 from models import Database
@@ -34,7 +36,7 @@ class MainStream:
         self.processing_queue = asyncio.Queue()  # Queue for processing frames
 
     async def capture_and_send_frames(self, url):
-        """ Captures frames and sends them to the processing queue. """
+        """Captures frames and sends them to the processing queue."""
         cap = VideoStream(url).start()
         while True:
             frame = cap.read()
@@ -43,30 +45,49 @@ class MainStream:
             await asyncio.sleep(0.1)
 
     async def process_frames(self):
-        """ Processes frames from all cameras. """
+        """Processes frames from all cameras."""
+        last_screenshot_time = datetime.now()
+        screenshot_interval = 5
         while True:
             frame, url = await self.processing_queue.get()
             self.face_recognition.current_frame = frame
+            current_time = datetime.now()
             faces = self.face_model.get(frame)
             tasks = [self.face_recognition.process_face(face) for face in faces]
             results = await asyncio.gather(*tasks)
             for name in results:
                 if name is not None:
-                    await self.alert_manager.handle_alert(frame=frame, detected_face=name, url=url)
+                    await self.alert_manager.handle_alert(
+                        frame=frame, detected_face=name, url=url
+                    )
+            if (
+                current_time - last_screenshot_time
+            ).total_seconds() >= screenshot_interval:
+                self.save_screenshot(frame, url, current_time)
+                last_screenshot_time = current_time
 
     async def reload_face_encodings_periodically(self):
         while True:
             print("Reloading face encodings...")
-            self.index, self.known_face_names = self.trainer.load_face_encodings(self.root_dir)
-            self.face_recognition.index, self.face_recognition.known_face_names = self.trainer.load_face_encodings(
-                self.root_dir)
-            print("Length of face encodings: ", len(self.face_recognition.known_face_names))
+            self.index, self.known_face_names = self.trainer.load_face_encodings(
+                self.root_dir
+            )
+            (
+                self.face_recognition.index,
+                self.face_recognition.known_face_names,
+            ) = self.trainer.load_face_encodings(self.root_dir)
+            print(
+                "Length of face encodings: ",
+                len(self.face_recognition.known_face_names),
+            )
             await self.update_camera_streams()
             await asyncio.sleep(10)
 
     async def start_camera_streams(self):
         """Start frame capture tasks for all cameras and the central processing task."""
-        tasks = [asyncio.create_task(self.capture_and_send_frames(url)) for url in self.urls]
+        tasks = [
+            asyncio.create_task(self.capture_and_send_frames(url)) for url in self.urls
+        ]
         tasks.append(asyncio.create_task(self.process_frames()))
         await asyncio.gather(*tasks)
 
@@ -79,6 +100,19 @@ class MainStream:
             for url in added_urls:
                 asyncio.create_task(self.capture_and_send_frames(url))
             self.urls.extend(added_urls)
+
+    def save_screenshot(self, frame, url, timestamp):
+        """Saves a screenshot with a specific naming format, including only the IP address from the URL."""
+        parsed_url = urlparse(url)
+        ip_address = parsed_url.hostname  # Extracts the hostname/IP address
+
+        formatted_time = timestamp.strftime("%Y-%m-%d|%H-%M-%S")
+        filename = f"{formatted_time}|{ip_address}.jpg"
+        directory = os.path.join("../media/screenshots/suspends")
+        os.makedirs(directory, exist_ok=True)  # Ensure directory exists
+        filepath = os.path.join(directory, filename)
+        print(filepath)
+        cv2.imwrite(filepath, frame)
 
 
 async def websocket_server(websocket, path):
@@ -102,9 +136,14 @@ async def websocket_server(websocket, path):
 
 # Function to list all image paths in a specific directory
 def list_image_paths(directory):
-    relative_paths = [os.path.join(directory, f) for f in os.listdir(directory) if
-                      os.path.isfile(os.path.join(directory, f))]
-    absolute_paths = [path.replace('../', host_address + "/", 1) for path in relative_paths]
+    relative_paths = [
+        os.path.join(directory, f)
+        for f in os.listdir(directory)
+        if os.path.isfile(os.path.join(directory, f))
+    ]
+    absolute_paths = [
+        path.replace("../", host_address + "/", 1) for path in relative_paths
+    ]
     return absolute_paths
 
 
@@ -115,17 +154,24 @@ async def send_image_paths(websocket, path):
 
     while True:
         current_image_files = set(
-            f for f in os.listdir(screenshots_dir) if os.path.isfile(os.path.join(screenshots_dir, f)))
-        current_image_paths = {os.path.join(screenshots_dir, f) for f in current_image_files}
+            f
+            for f in os.listdir(screenshots_dir)
+            if os.path.isfile(os.path.join(screenshots_dir, f))
+        )
+        current_image_paths = {
+            os.path.join(screenshots_dir, f) for f in current_image_files
+        }
         new_paths = current_image_paths - sent_image_paths
         for file_path in new_paths:
             creation_time = datetime.fromtimestamp(os.path.getctime(file_path))
             if creation_time > connection_time:
                 image_name = os.path.basename(file_path)
-                camera_url = image_name.split('|')[-1].rstrip('.jpg')
+                camera_url = image_name.split("|")[-1].rstrip(".jpg")
                 camera_object = database.get_by_similar(camera_url)
-                image_url = file_path.replace('../', host_address + "/", 1)
-                camera_object["image"] = host_address + "/media/" + camera_object.get("image")
+                image_url = file_path.replace("../", host_address + "/", 1)
+                camera_object["image"] = (
+                    host_address + "/media/" + camera_object.get("image")
+                )
                 message = {"image_path": image_url, "camera_object": camera_object}
                 await websocket.send(json.dumps(message))
                 sent_image_paths.add(file_path)
@@ -134,19 +180,25 @@ async def send_image_paths(websocket, path):
 
 async def image_path_server(websocket, path):
     consumer_task = asyncio.ensure_future(send_image_paths(websocket, path))
-    done, pending = await asyncio.wait([consumer_task], return_when=asyncio.FIRST_COMPLETED)
+    done, pending = await asyncio.wait(
+        [consumer_task], return_when=asyncio.FIRST_COMPLETED
+    )
     for task in pending:
         task.cancel()
 
 
 async def main():
     ws_server = await websockets.serve(websocket_server, "0.0.0.0", 5000)
+    img_server = await websockets.serve(image_path_server, "0.0.0.0", 5678)
     camera_streams_task = asyncio.create_task(stream.start_camera_streams())
-    reload_encodings_task = asyncio.create_task(stream.reload_face_encodings_periodically())
+    reload_encodings_task = asyncio.create_task(
+        stream.reload_face_encodings_periodically()
+    )
     await asyncio.gather(
         ws_server.wait_closed(),
+        img_server.wait_closed(),
         camera_streams_task,
-        reload_encodings_task,  # Include the new task here
+        reload_encodings_task,
     )
 
 

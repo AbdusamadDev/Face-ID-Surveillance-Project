@@ -50,7 +50,7 @@ class AlertManager:
             json.dumps({"identity": details, "camera": camera})
         )
         print({"identity": details, "camera": camera})
-        await self.broadcast_to_firebase_clients(details, camera)
+        # await self.broadcast_to_firebase_clients(details, camera)
 
     # async def broadcast_to_firebase_clients(self, details, camera):
     #     # Define the notification message
