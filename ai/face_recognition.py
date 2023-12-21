@@ -7,6 +7,6 @@ class FaceRecognition:
     async def process_face(self, face):
         embedding = face.embedding
         similarity, index = self.index.search(embedding.reshape(1, -1), 1)
-        if similarity[0, 0] < 500:
+        if similarity[0, 0] < 600:
             return self.known_face_names[index[0, 0]]
         return None

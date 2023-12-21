@@ -48,6 +48,10 @@ class MainStream:
         """Processes frames from all cameras."""
         last_screenshot_time = datetime.now()
         screenshot_interval = 5
+        face_detected_time = None
+        consecutive_face_duration = 0
+        consecutive_no_face_duration = 0
+
         while True:
             frame, url = await self.processing_queue.get()
             self.face_recognition.current_frame = frame
@@ -55,15 +59,31 @@ class MainStream:
             faces = self.face_model.get(frame)
             tasks = [self.face_recognition.process_face(face) for face in faces]
             results = await asyncio.gather(*tasks)
+
             for name in results:
                 if name is not None:
-                    await self.alert_manager.handle_alert(
-                        frame=frame, detected_face=name, url=url
+                    face_detected_time = current_time
+                    consecutive_face_duration += (
+                        0.1  # Assuming 0.1 seconds for each frame
                     )
+
+            if face_detected_time:
+                consecutive_no_face_duration = 0
+            else:
+                consecutive_no_face_duration += 0.1
+
+            if (
+                consecutive_face_duration >= screenshot_interval
+                and consecutive_no_face_duration >= screenshot_interval
+            ):
+                self.save_screenshot(frame, url, current_time)
+                consecutive_face_duration = 0
+                consecutive_no_face_duration = 0
+                face_detected_time = None
+
             if (
                 current_time - last_screenshot_time
             ).total_seconds() >= screenshot_interval:
-                self.save_screenshot(frame, url, current_time)
                 last_screenshot_time = current_time
 
     async def reload_face_encodings_periodically(self):
