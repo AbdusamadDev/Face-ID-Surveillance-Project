@@ -48,10 +48,6 @@ class MainStream:
         """Processes frames from all cameras."""
         last_screenshot_time = datetime.now()
         screenshot_interval = 5
-        face_detected_time = None
-        consecutive_face_duration = 0
-        consecutive_no_face_duration = 0
-
         while True:
             frame, url = await self.processing_queue.get()
             self.face_recognition.current_frame = frame
@@ -59,31 +55,15 @@ class MainStream:
             faces = self.face_model.get(frame)
             tasks = [self.face_recognition.process_face(face) for face in faces]
             results = await asyncio.gather(*tasks)
-
             for name in results:
                 if name is not None:
-                    face_detected_time = current_time
-                    consecutive_face_duration += (
-                        0.1  # Assuming 0.1 seconds for each frame
+                    await self.alert_manager.handle_alert(
+                        frame=frame, detected_face=name, url=url
                     )
-
-            if face_detected_time:
-                consecutive_no_face_duration = 0
-            else:
-                consecutive_no_face_duration += 0.1
-
-            if (
-                consecutive_face_duration >= screenshot_interval
-                and consecutive_no_face_duration >= screenshot_interval
-            ):
-                self.save_screenshot(frame, url, current_time)
-                consecutive_face_duration = 0
-                consecutive_no_face_duration = 0
-                face_detected_time = None
-
             if (
                 current_time - last_screenshot_time
             ).total_seconds() >= screenshot_interval:
+                self.save_screenshot(frame, url, current_time)
                 last_screenshot_time = current_time
 
     async def reload_face_encodings_periodically(self):
@@ -143,8 +123,7 @@ async def websocket_server(websocket, path):
         await manager.register(websocket, data)
 
         while True:
-            # Here you can add any additional message handling logic if needed
-            await asyncio.sleep(10)
+            await asyncio.sleep(1000)
 
     except websockets.exceptions.ConnectionClosedError as e:  # type: ignore
         await manager.unregister(websocket)
@@ -154,7 +133,6 @@ async def websocket_server(websocket, path):
         await manager.unregister(websocket)
 
 
-# Function to list all image paths in a specific directory
 def list_image_paths(directory):
     relative_paths = [
         os.path.join(directory, f)
@@ -208,8 +186,8 @@ async def image_path_server(websocket, path):
 
 
 async def main():
-    ws_server = await websockets.serve(websocket_server, "0.0.0.0", 5000)
-    img_server = await websockets.serve(image_path_server, "0.0.0.0", 5678)
+    ws_server = await websockets.serve(websocket_server, "0.0.0.0", 4545)
+    img_server = await websockets.serve(image_path_server, "0.0.0.0", 5656)
     camera_streams_task = asyncio.create_task(stream.start_camera_streams())
     reload_encodings_task = asyncio.create_task(
         stream.reload_face_encodings_periodically()

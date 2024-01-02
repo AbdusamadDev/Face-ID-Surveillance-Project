@@ -4,12 +4,14 @@ from django.core.files.storage import FileSystemStorage
 
 
 def criminal_image_path(instance, filename):
-    return f'criminals/{instance.pk}/main.jpg'
+    return f"criminals/{instance.pk}/main.jpg"
 
 
 class Camera(models.Model):
     name = models.CharField(max_length=150, null=False, unique=False, blank=False)
-    image = models.ImageField(upload_to="./cameras/", default="none", null=False, blank=False)
+    image = models.ImageField(
+        upload_to="./cameras/", default="none", null=False, blank=False
+    )
     url = models.CharField(max_length=150, unique=False, null=False, blank=False)
     longitude = models.FloatField(null=False, blank=False, unique=False)
     latitude = models.FloatField(null=False, blank=False, unique=False)
@@ -36,8 +38,8 @@ class Criminals(models.Model):
         self.image = None
         super().save(*args, **kwargs)
         self.image = temp_image
-        if 'force_insert' in kwargs:
-            kwargs.pop('force_insert')
+        if "force_insert" in kwargs:
+            kwargs.pop("force_insert")
         super().save(*args, **kwargs)
         if self.image:
             storage = FileSystemStorage()
@@ -51,5 +53,14 @@ class Criminals(models.Model):
 class CriminalsRecords(models.Model):
     criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE, default=1)
     camera = models.ForeignKey(to=Camera, on_delete=models.CASCADE, default=1)
-    image_path = models.URLField(default="https://www.youtube.com")
+    image_path = models.URLField(default="https://www.image-test.com")
     date_recorded = models.DateTimeField(auto_now_add=True)
+
+
+class TempRecords(models.Model):
+    record = models.ForeignKey(to=CriminalsRecords, on_delete=models.CASCADE)
+
+
+class TempClientLocations(models.Model):
+    longitude = models.FloatField(unique=True)
+    latitude = models.FloatField(unique=True)

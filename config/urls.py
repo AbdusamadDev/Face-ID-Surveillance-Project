@@ -10,6 +10,7 @@ router = DefaultRouter()
 router.register(r"criminals", CriminalsAPIView)
 router.register(r"camera", CameraAPIView)
 router.register(r"records", CriminalsRecordsAPIView)
+router.register(r"mud", AndroidRequestHandlerAPIView)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -22,4 +23,5 @@ urlpatterns = [
         "suspends/",
         SuspendedScreenshotsAPIView.as_view(),
     ),
+    path("api/clients/", fully_fetched_data),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

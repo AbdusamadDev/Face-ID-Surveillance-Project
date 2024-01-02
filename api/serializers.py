@@ -2,7 +2,9 @@ from rest_framework import serializers
 
 from api.utils import host_address
 from api.models import (
+    TempClientLocations,
     CriminalsRecords,
+    TempRecords,
     Criminals,
     Camera,
 )
@@ -15,14 +17,14 @@ class CameraSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super(CameraSerializer, self).__init__(*args, **kwargs)
-        request = self.context.get('request')
+        request = self.context.get("request")
 
-        if request and request.method == 'PATCH':
-            self.fields['image'].required = False
-            self.fields['image'].allow_null = True
+        if request and request.method == "PATCH":
+            self.fields["image"].required = False
+            self.fields["image"].allow_null = True
 
     def create(self, validated_data):
-        image = validated_data.pop('image', None)
+        image = validated_data.pop("image", None)
         instance = Camera.objects.create(**validated_data)
 
         if image:
@@ -32,12 +34,12 @@ class CameraSerializer(serializers.ModelSerializer):
         return instance
 
     def validate_image(self, value):
-        if value is not None and not hasattr(value, 'file'):
+        if value is not None and not hasattr(value, "file"):
             raise serializers.ValidationError("This field should be a file.")
         return value
 
     def update(self, instance, validated_data):
-        image = validated_data.pop('image', None)
+        image = validated_data.pop("image", None)
 
         if image is not None:
             instance.image.delete(save=False)  # Delete old image file.
@@ -64,7 +66,10 @@ class CriminalsSerializer(serializers.ModelSerializer):
         super(CriminalsSerializer, self).__init__(*args, **kwargs)
 
         # Make all fields not required if the request method is PATCH
-        if self.context.get('request', None) and self.context['request'].method == 'PATCH':
+        if (
+            self.context.get("request", None)
+            and self.context["request"].method == "PATCH"
+        ):
             for field_name, field in self.fields.items():
                 field.required = False
                 print(field)
@@ -82,3 +87,17 @@ class CriminalsRecordsSerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"
         model = CriminalsRecords
+
+
+class TempRecordsSerializer(serializers.ModelSerializer):
+    record = CriminalsRecordsSerializer()
+
+    class Meta:
+        fields = "__all__"
+        model = TempRecords
+
+
+class TempClientLocationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = "__all__"
+        model = TempClientLocations

@@ -17,16 +17,18 @@ class AlertManager:
         time_since_last_alert = (now - last_alert_time).total_seconds()
 
         time_since_last_seen = (
-                now - self.face_last_seen.get(detected_face, datetime.min)
+            now - self.face_last_seen.get(detected_face, datetime.min)
         ).total_seconds()
 
         if time_since_last_seen > 5 and time_since_last_alert > 3:
-            await self.send_alert(detected_face, url)
             year, month, day = datetime.now().timetuple()[:3]
             path = (
                 f"../media/screenshots/criminals/{detected_face}/{year}/{month}/{day}"
             )
             image_name = save_screenshot(frame, path=path, camera_url=url)
+            await self.send_alert(
+                detected_face, url, path=host_address + image_name[2:]
+            )
             camera_object = self.database.get_camera(url)
             if camera_object:
                 camera_object = camera_object.get("id")
@@ -34,38 +36,21 @@ class AlertManager:
                 image=f"{host_address}{image_name[2:]}",
                 date_recorded=datetime.now(),
                 criminal=int(detected_face),
-                camera=camera_object
+                camera=camera_object,
             )
+            self.database.add_temp()
             self.last_alert_time[detected_face] = now
 
         self.face_last_seen[detected_face] = now
 
-    async def send_alert(self, detected_face, url):
+    async def send_alert(self, detected_face, url, path):
         details = self.database.get_details(detected_face)
         camera = self.database.get_camera(url)
         camera["image"] = host_address + "/media/" + camera.get("image")
-        details["date_created"] = str(details.get('date_created'))
-        details["image"] = host_address + "/media/criminals/" + str(detected_face) + "/" + "main.jpg"
-        await self.websocket_manager.send_to_all(
-            json.dumps({"identity": details, "camera": camera})
+        details["date_created"] = str(details.get("date_created"))
+        details["image"] = (
+            host_address + "/media/criminals/" + str(detected_face) + "/" + "main.jpg"
         )
-        print({"identity": details, "camera": camera})
-        # await self.broadcast_to_firebase_clients(details, camera)
-
-    # async def broadcast_to_firebase_clients(self, details, camera):
-    #     # Define the notification message
-    #     message = messaging.Message(
-    #         notification=messaging.Notification(
-    #             title="Alert: Detected Face",
-    #             body=f"Face detected: {details['name']}"  # Adjust the message details as needed
-    #         ),
-    #         data={
-    #             "identity": json.dumps(details),
-    #             "camera": json.dumps(camera)
-    #         },
-    #         topic="your-topic-name"  # Use a specific topic that clients subscribe to
-    #     )
-
-    #     # Send the message
-    #     response = messaging.send(message)
-    #     print('Successfully sent message:', response)
+        result = {"identity": details, "camera": camera, "screenshot": path}
+        await self.websocket_manager.send_to_all(json.dumps(result))
+        print(result)

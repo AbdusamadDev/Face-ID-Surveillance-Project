@@ -40,7 +40,15 @@ class Database:
     def get_details(self, employee_id):
         query = "SELECT * FROM api_criminals WHERE id=%s"
         rows = self._execute_query(query, (employee_id,))
-        labels = ["id", "first_name", "last_name", "age", "description", "date_created", "middle_name"]
+        labels = [
+            "id",
+            "first_name",
+            "last_name",
+            "age",
+            "description",
+            "date_created",
+            "middle_name",
+        ]
         if rows is not None:
             try:
                 rows_dict = {label: row for label, row in zip(labels, rows[0])}
@@ -78,7 +86,7 @@ class Database:
             INSERT INTO api_criminalsrecords (image_path, date_recorded, criminal_id, camera_id)
             VALUES (%s, %s, %s, %s)
             """,
-            (image, date_recorded, criminal, camera)
+            (image, date_recorded, criminal, camera),
         )
         connection.commit()
 
@@ -102,44 +110,23 @@ class Database:
 
         return context
 
-
-def get_details(first_name):
-    connection = psycopg2.connect(
-        dbname="postgres", user="postgres", password="2005", host="localhost"
-    )
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM api_criminals WHERE first_name=%s", (first_name,))
-    query = cursor.fetchall()
-    connection.close()
-    if query:
-        return query[0]
-    return []
-
-
-def get_camera(url):
-    connection = psycopg2.connect(
-        dbname="postgres", user="postgres", password="2005", host="localhost"
-    )
-    cursor = connection.cursor()
-    cursor.execute("SELECT * FROM api_camera WHERE url=%s", (url,))
-    query = cursor.fetchall()
-    connection.close()
-    if query:
-        return query[0]
-    return []
-
-
-def get_camera_urls():
-    connection = psycopg2.connect(
-        dbname="postgres", user="postgres", password="2005", host="localhost"
-    )
-    cursor = connection.cursor()
-    cursor.execute("SELECT url FROM api_camera")
-    cameras = cursor.fetchall()
-    connection.close()
-    return [camera[0] for camera in cameras]
+    def add_temp(self):
+        last_created_record = self._execute_query(
+            """SELECT * FROM api_criminalsrecords ORDER BY id DESC LIMIT 1;""",
+            tuple(),
+        )
+        if last_created_record:
+            last_created_record = last_created_record[0][0]
+        conn = self._db_connect()
+        cursor = conn.cursor()
+        cursor.execute(
+            """INSERT INTO api_temprecords (record_id) VALUES (%s);""",
+            (last_created_record,),
+        )
+        conn.commit()
+        return last_created_record
 
 
 if __name__ == "__main__":
     database = Database()
-    print(database.get_by_similar("192.168.1.152"))
+    print(database.add_temp())

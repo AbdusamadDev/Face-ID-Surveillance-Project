@@ -1,6 +1,3 @@
-update the camera and criminals details. There will be new criminals or camera may be added, but
-criminal details wont be updated as face encodings, and newly added camera wont be connected
-
 results should be displayed correctly to the client, problem is that the data is being
 displayed after second glance to the camera
 

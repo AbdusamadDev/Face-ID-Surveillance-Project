@@ -1,21 +1,24 @@
 #  ############## Django and Django Rest Framework imports ################
-from django.http import JsonResponse
 from rest_framework.viewsets import ModelViewSet
+from rest_framework.decorators import api_view
 from rest_framework.request import HttpRequest
+from django.db.utils import OperationalError
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.http import JsonResponse
 from rest_framework import status
 
 #  ######################### Local apps imports ###########################
-from api.models import Camera, Criminals, CriminalsRecords
-from api.utils import host_address
+from api.utils import host_address, find_nearest_location
 from api.pagination import (
     CriminalsRecordsPagination,
     CriminalsPagination,
     CameraPagination,
 )
 from api.serializers import (
+    TempClientLocationsSerializer,
     CriminalsRecordsSerializer,
+    TempRecordsSerializer,
     CriminalsSerializer,
     CameraSerializer,
 )
@@ -23,6 +26,13 @@ from api.filters import (
     CriminalsRecordFilter,
     CriminalsFilter,
     CameraFilter,
+)
+from api.models import (
+    TempClientLocations,
+    CriminalsRecords,
+    TempRecords,
+    Criminals,
+    Camera,
 )
 
 #  #################### Standard libraries imports ########################
@@ -72,7 +82,7 @@ class CriminalsAPIView(ModelViewSet):
             instance, data=request.data, partial=True, context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
-        path = os.path.join("media", "criminals", kwargs.get('pk'))
+        path = os.path.join("media", "criminals", kwargs.get("pk"))
         image = serializer.validated_data.get("image")
         if image:
             if os.path.exists(path):
@@ -193,4 +203,81 @@ class CriminalsRecordsAPIView(ModelViewSet):
     queryset = CriminalsRecords.objects.all().order_by("-date_recorded")
     pagination_class = CriminalsRecordsPagination
     filterset_class = CriminalsRecordFilter
-    http_method_names = ['get', 'head', 'options', "post", "delete"]
+    http_method_names = ["get", "head", "options", "post", "delete"]
+
+
+class AndroidRequestHandlerAPIView(ModelViewSet):
+    model = TempRecords
+    lookup_field = "pk"
+    queryset = TempRecords.objects.all()
+    serializer_class = TempRecordsSerializer
+
+    def create(self, request, *args, **kwargs):
+        headers = request.headers
+        if not headers:
+            return Response({"msg": "location lgt & ltd not provided in headers"})
+        longitude = headers.get("longitude", None)
+        latitude = headers.get("latitude", None)
+        clients = list(TempClientLocations.objects.all().values())
+        if {"longitude": longitude, "latitude": latitude} not in clients:
+            try:
+                TempClientLocations.objects.create(
+                    longitude=longitude, latitude=latitude
+                )
+                return Response({"msg": "Client connected"}, status=201)
+            except:
+                pass
+        return Response({"msg": "Error occured!"}, status=422)
+
+    def list(self, request, *args, **kwargs):
+        try:
+            query = self.queryset.first()
+            headers = request.headers
+            longitude = headers.get("longitude", None)
+            latitude = headers.get("latitude", None)
+            if longitude is None or latitude is None:
+                return Response(
+                    {"msg": "Longitude or Latitude is not provided in headers"}
+                )
+
+            clients = list(TempClientLocations.objects.all().values())
+            camera = self.queryset.first()
+            if camera is not None:
+                camera  = camera.record.camera
+            else:
+                return Response({})
+            camera_object = Camera.objects.get(pk=camera.pk)
+            target_location = {
+                "longitude": camera_object.longitude,
+                "latitude": camera_object.latitude,
+            }
+            nearest_location = find_nearest_location(target_location, clients)
+            if (float(nearest_location.get("longitude")) == float(longitude)) and (
+                float(nearest_location.get("latitude") == float(latitude))
+            ):
+                self.model.objects.all().delete()
+                return Response(self.serializer_class(query).data)
+            return Response({})
+        except OperationalError:
+            return Response({})
+
+    def destroy(self, request, pk, *args, **kwargs):
+        headers = request.headers
+        if "longitude" not in headers.keys() or "latitude" not in headers.keys():
+            return Response(
+                {"msg": "Required headers not provided: longitude & latitude"}
+            )
+
+        client = TempClientLocations.objects.get(pk=pk)
+        if not client:
+            return Response({"msg": f"Client with id: {pk} not found!"}, status=404)
+        client.delete()
+        return Response(status=204)
+
+
+@api_view(http_method_names=["GET"])
+def fully_fetched_data(request):
+
+    clients = TempClientLocations.objects.all()
+    serializer = TempClientLocationsSerializer(instance=clients, many=True)
+    return Response(serializer.data, status=200)

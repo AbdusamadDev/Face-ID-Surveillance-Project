@@ -5,6 +5,7 @@ import insightface
 import socket
 import faiss
 from dotenv import load_dotenv
+from geopy.distance import distance
 
 load_dotenv()
 
@@ -73,6 +74,27 @@ def is_similar(new_encoding, threshold=400):
         return existing_names[I[0][0]]
 
     return None
+
+
+def find_nearest_location(target_location, locations):
+    """
+    Find the nearest location in a list of locations to a target location.
+
+    Parameters:
+    - target_location: A dictionary with "longitude" and "latitude" keys.
+    - locations: A list of dictionaries with "longitude" and "latitude" keys.
+
+    Returns:
+    - The nearest location as a dictionary.
+    """
+    target_point = (target_location["latitude"], target_location["longitude"])
+
+    nearest_location = min(
+        locations,
+        key=lambda loc: distance(target_point, (loc["latitude"], loc["longitude"])).km,
+    )
+
+    return nearest_location
 
 
 def check_allowed_characters(value, exception):
