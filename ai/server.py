@@ -68,7 +68,6 @@ class MainStream:
 
     async def reload_face_encodings_periodically(self):
         while True:
-            print("Reloading face encodings...")
             self.index, self.known_face_names = self.trainer.load_face_encodings(
                 self.root_dir
             )
@@ -76,11 +75,7 @@ class MainStream:
                 self.face_recognition.index,
                 self.face_recognition.known_face_names,
             ) = self.trainer.load_face_encodings(self.root_dir)
-            print(
-                "Length of face encodings: ",
-                len(self.face_recognition.known_face_names),
-            )
-            await self.update_camera_streams()
+            await self.reconnect_cameras_periodically()
             await asyncio.sleep(10)
 
     async def start_camera_streams(self):
@@ -91,15 +86,12 @@ class MainStream:
         tasks.append(asyncio.create_task(self.process_frames()))
         await asyncio.gather(*tasks)
 
-    async def update_camera_streams(self):
-        new_urls = self.database.get_camera_urls()
-        added_urls = set(new_urls) - set(self.urls)
-
-        if added_urls:
-            print(f"New cameras added: {added_urls}")
-            for url in added_urls:
+    async def reconnect_cameras_periodically(self, interval=60):
+        """Reconnects to all cameras one by one at specified intervals."""
+        while True:
+            for url in database.get_camera_urls():
                 asyncio.create_task(self.capture_and_send_frames(url))
-            self.urls.extend(added_urls)
+            await asyncio.sleep(interval)
 
     def save_screenshot(self, frame, url, timestamp):
         """Saves a screenshot with a specific naming format, including only the IP address from the URL."""
@@ -111,7 +103,6 @@ class MainStream:
         directory = os.path.join("../media/screenshots/suspends")
         os.makedirs(directory, exist_ok=True)  # Ensure directory exists
         filepath = os.path.join(directory, filename)
-        print(filepath)
         cv2.imwrite(filepath, frame)
 
 
@@ -119,8 +110,6 @@ async def websocket_server(websocket, path):
     manager = stream.websocket_manager
     try:
         message = await websocket.recv()
-        print(message)
-        print("\n" * 15)
         data = json.loads(message)
         token = data.get("token", None)
         if token is not None:
@@ -132,9 +121,6 @@ async def websocket_server(websocket, path):
         else:
             await websocket.send(json.dumps({"msg": "Token is not provided!"}))
             await manager.unregister(websocket)
-        print("Clients: ", manager.web_clients)
-        print("Current client: ", websocket)
-        print("Number of clients: ", len(manager.web_clients))
         while True:
             await asyncio.sleep(1000)
     except websockets.exceptions.ConnectionClosedError as e:  # type: ignore
