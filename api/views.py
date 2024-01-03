@@ -1,4 +1,6 @@
 #  ############## Django and Django Rest Framework imports ################
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.decorators import api_view
 from rest_framework.request import HttpRequest
@@ -51,6 +53,8 @@ class CameraAPIView(ModelViewSet):
     lookup_field = "pk"
     filterset_class = CameraFilter
     pagination_class = CameraPagination
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
 
 class CriminalsAPIView(ModelViewSet):
@@ -60,6 +64,7 @@ class CriminalsAPIView(ModelViewSet):
     in serializers
     """
 
+    authentication_classes = [TokenAuthentication]
     model = Criminals
     serializer_class = CriminalsSerializer
     queryset = Criminals.objects.all()
@@ -86,7 +91,6 @@ class CriminalsAPIView(ModelViewSet):
         image = serializer.validated_data.get("image")
         if image:
             if os.path.exists(path):
-                print("Path: ", path)
                 shutil.rmtree(path)
 
         serializer.save()
@@ -207,6 +211,7 @@ class CriminalsRecordsAPIView(ModelViewSet):
 
 
 class AndroidRequestHandlerAPIView(ModelViewSet):
+    authentication_classes = [TokenAuthentication]
     model = TempRecords
     lookup_field = "pk"
     queryset = TempRecords.objects.all()
@@ -243,7 +248,7 @@ class AndroidRequestHandlerAPIView(ModelViewSet):
             clients = list(TempClientLocations.objects.all().values())
             camera = self.queryset.first()
             if camera is not None:
-                camera  = camera.record.camera
+                camera = camera.record.camera
             else:
                 return Response({})
             camera_object = Camera.objects.get(pk=camera.pk)
@@ -277,7 +282,6 @@ class AndroidRequestHandlerAPIView(ModelViewSet):
 
 @api_view(http_method_names=["GET"])
 def fully_fetched_data(request):
-
     clients = TempClientLocations.objects.all()
     serializer = TempClientLocationsSerializer(instance=clients, many=True)
     return Response(serializer.data, status=200)
