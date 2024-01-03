@@ -75,8 +75,7 @@ class MainStream:
                 self.face_recognition.index,
                 self.face_recognition.known_face_names,
             ) = self.trainer.load_face_encodings(self.root_dir)
-            await self.reconnect_cameras_periodically()
-            await asyncio.sleep(10)
+            await asyncio.sleep(60)
 
     async def start_camera_streams(self):
         """Start frame capture tasks for all cameras and the central processing task."""
@@ -190,11 +189,13 @@ async def main():
     reload_encodings_task = asyncio.create_task(
         stream.reload_face_encodings_periodically()
     )
+    camera_reconnection = asyncio.create_task(stream.reconnect_cameras_periodically())
     await asyncio.gather(
         ws_server.wait_closed(),
         img_server.wait_closed(),
         camera_streams_task,
         reload_encodings_task,
+        camera_reconnection,
     )
 
 
