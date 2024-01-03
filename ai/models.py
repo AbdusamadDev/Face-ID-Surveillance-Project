@@ -126,7 +126,15 @@ class Database:
         conn.commit()
         return last_created_record
 
+    def is_authenticated(self, token):
+        token = self._execute_query(
+            """SElECT user_id FROM authtoken_token WHERE key=%s;""", (token,)
+        )
+        if token:
+            return True
+        return False
+
 
 if __name__ == "__main__":
     database = Database()
-    print(database.add_temp())
+    print(database.is_authenticated("459ede94edbd1c8a1fc1a47194bebaf79523853e"))

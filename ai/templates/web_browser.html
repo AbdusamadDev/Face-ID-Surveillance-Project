@@ -4,9 +4,9 @@
 <head>
     <title>Browser</title>
     <script>
-        const wsNearestClient = new WebSocket('ws://localhost:1212');
+        const wsNearestClient = new WebSocket('ws://0.0.0.0:4545');
         wsNearestClient.onopen = function () {
-            wsNearestClient.send(JSON.stringify({"state": "web" }));
+            wsNearestClient.send(JSON.stringify({"state": "web", "token": "459ede94edbd1c8a1fc1a47194bebaf79523853e"}));
         };
         wsNearestClient.onmessage = function (event) {
             const data = JSON.parse(event.data);

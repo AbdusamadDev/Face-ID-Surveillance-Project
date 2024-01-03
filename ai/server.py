@@ -119,12 +119,24 @@ async def websocket_server(websocket, path):
     manager = stream.websocket_manager
     try:
         message = await websocket.recv()
-        data = json.loads(message) or None
-        await manager.register(websocket, data)
-
+        print(message)
+        print("\n" * 15)
+        data = json.loads(message)
+        token = data.get("token", None)
+        if token is not None:
+            if database.is_authenticated(token):
+                await manager.register(websocket, data)
+            else:
+                await websocket.send(json.dumps({"msg": "Invalid token provided!"}))
+                await manager.unregister(websocket)
+        else:
+            await websocket.send(json.dumps({"msg": "Token is not provided!"}))
+            await manager.unregister(websocket)
+        print("Clients: ", manager.web_clients)
+        print("Current client: ", websocket)
+        print("Number of clients: ", len(manager.web_clients))
         while True:
             await asyncio.sleep(1000)
-
     except websockets.exceptions.ConnectionClosedError as e:  # type: ignore
         await manager.unregister(websocket)
     except json.JSONDecodeError as e:

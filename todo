@@ -1,7 +1,6 @@
 results should be displayed correctly to the client, problem is that the data is being
 displayed after second glance to the camera
 
-Authorization. Fully should be provided authorization and authentication
 
 
 continuously check camera life, if camera was disconnected for some reason, then it

@@ -4,7 +4,7 @@
 <head>
     <title>Browser</title>
     <script>
-        const wsUri = "ws://localhost:2323/";  // Replace with your specific server URI
+        const wsUri = "ws://0.0.0.0:5656";  // Replace with your specific server URI
         const websocket = new WebSocket(wsUri);
 
         websocket.onmessage = function (event) {
