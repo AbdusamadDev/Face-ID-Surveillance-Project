@@ -56,12 +56,6 @@ class CameraAPIView(ModelViewSet):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def retrieve(self, request, *args, **kwargs):
-        print(request.headers)
-        print(request.data)
-        print(request.body)
-        return super().retrieve(request, *args, **kwargs)
-
 
 class CriminalsAPIView(ModelViewSet):
     """
@@ -71,6 +65,7 @@ class CriminalsAPIView(ModelViewSet):
     """
 
     authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     model = Criminals
     serializer_class = CriminalsSerializer
     queryset = Criminals.objects.all()
