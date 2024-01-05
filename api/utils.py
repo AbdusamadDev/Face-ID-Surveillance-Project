@@ -1,11 +1,13 @@
-import psycopg2
+from geopy.distance import distance
+from string import ascii_letters
+from dotenv import load_dotenv
 import numpy as np
-import os
 import insightface
+import psycopg2
+import random
 import socket
 import faiss
-from dotenv import load_dotenv
-from geopy.distance import distance
+import os
 
 load_dotenv()
 
@@ -106,6 +108,17 @@ def check_allowed_characters(value, exception):
     for letter in value:
         if letter not in allowed_chrs:
             raise exception
+
+
+def get_unique_key(keys):
+    pk = "".join(
+        random.choice(ascii_letters + "".join(str(i) for i in range(10)))
+        for _ in range(15)
+    )
+    if pk not in keys:
+        return pk
+    else:
+        return get_unique_key(keys)
 
 
 allowed_characters = characters()

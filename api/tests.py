@@ -246,14 +246,36 @@ import os
 #
 # sl = Solution()
 # print(sl.strStr("A man, a plan, a canal", "a"))
-class Solution:
-    def reverse(self, x: int) -> int:
-        result = - int(str(x)[::-1][:-1]) if x < 0 else int(str(x)[::-1])
-        if -2 ** 31 >= result or result >= 2 ** 31 - 1:
-            return 0
-        return result
+# class Solution:
+#     def reverse(self, x: int) -> int:
+#         result = - int(str(x)[::-1][:-1]) if x < 0 else int(str(x)[::-1])
+#         if -2 ** 31 >= result or result >= 2 ** 31 - 1:
+#             return 0
+#         return result
 
 
-sl = Solution()
-print((2 ** 31 - 1) > 9646324351)
-print(sl.reverse(1534236469))
+# sl = Solution()
+# print((2 ** 31 - 1) > 9646324351)
+# print(sl.reverse(1534236469))
+import random
+from string import ascii_letters
+
+example = {
+    "one": {"longitude": 7864234234, "latitude": 123422},
+    "two": {"longitude": 7823464, "latitude": 122342},
+    "three": {"longitude": 7862344, "latitude": 234122},
+}
+
+clients = list(example.values())
+print(clients)
+{
+    "Content-Length": "",
+    "Content-Type": "text/plain",
+    "Host": "localhost:8000",
+    "User-Agent": "python-requests/2.25.1",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "*/*",
+    "Connection": "keep-alive",
+    "Longitude": "19",
+    "Latitude": "72",
+}

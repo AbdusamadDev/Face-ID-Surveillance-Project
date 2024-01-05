@@ -2,16 +2,20 @@
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.decorators import api_view
 from rest_framework.request import HttpRequest
-from django.db.utils import OperationalError
 from rest_framework.response import Response
+from django.db.utils import OperationalError
 from rest_framework.views import APIView
 from django.http import JsonResponse
 from rest_framework import status
+from rest_framework.decorators import (
+    api_view,
+    authentication_classes,
+    permission_classes,
+)
 
 #  ######################### Local apps imports ###########################
-from api.utils import host_address, find_nearest_location
+from api.utils import host_address, find_nearest_location, get_unique_key
 from api.pagination import (
     CriminalsRecordsPagination,
     CriminalsPagination,
@@ -34,13 +38,17 @@ from api.models import (
     CriminalsRecords,
     TempRecords,
     Criminals,
+    UniqueKey,
     Camera,
 )
 
 #  #################### Standard libraries imports ########################
+from string import ascii_letters
 from math import ceil
+import random
 import shutil
 import time
+import uuid
 import os
 
 
@@ -212,73 +220,101 @@ class CriminalsRecordsAPIView(ModelViewSet):
 
 
 class AndroidRequestHandlerAPIView(ModelViewSet):
-    authentication_classes = [TokenAuthentication]
-    model = TempRecords
+    model = TempClientLocations
     lookup_field = "pk"
-    queryset = TempRecords.objects.all()
-    serializer_class = TempRecordsSerializer
+    queryset = TempClientLocations.objects.all()
+    serializer_class = TempClientLocationsSerializer
+    clients = dict()
 
     def create(self, request, *args, **kwargs):
-        headers = request.headers
-        if not headers:
-            return Response({"msg": "location lgt & ltd not provided in headers"})
-        longitude = headers.get("longitude", None)
-        latitude = headers.get("latitude", None)
-        clients = list(TempClientLocations.objects.all().values())
-        if {"longitude": longitude, "latitude": latitude} not in clients:
+        uuid_key = request.headers.get("token", None)
+        if uuid_key is None:
+            return Response({"msg": "Token is not provided!"}, status=400)
+        try:
+            uuid_object = UniqueKey.objects.get(uuid=uuid_key)
+        except UniqueKey.DoesNotExist:
+            return Response({"msg": "Invalid token provided!"}, status=400)
+        # except Exception:
+
+        # return Response({"msg": "Unknown error occued, try again"}, status=422)
+        uuid_object.delete()
+        serializer = self.serializer_class(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        longitude = serializer.validated_data.get("longitude")
+        latitude = serializer.validated_data.get("latitude")
+        longitudes = [key.get("longitude") for key in self.clients.values()]
+        latitudes = [key.get("latitude") for key in self.clients.values()]
+        if (latitude not in latitudes) and (longitude not in longitudes):
             try:
-                TempClientLocations.objects.create(
-                    longitude=longitude, latitude=latitude
+                pk = get_unique_key(list(self.clients.keys()))
+                self.clients[pk] = {"longitude": longitude, "latitude": latitude}
+                return Response(
+                    {"msg": "Client connected", "client_pk": pk}, status=201
                 )
-                return Response({"msg": "Client connected"}, status=201)
-            except:
+            except Exception as error:
+                print("Passing delete because of: ", error)
                 pass
         return Response({"msg": "Error occured!"}, status=422)
 
     def list(self, request, *args, **kwargs):
         try:
-            query = self.queryset.first()
+            query = TempRecords.objects.all().first()
             headers = request.headers
             longitude = headers.get("longitude", None)
             latitude = headers.get("latitude", None)
+            client_id = headers.get("client-id", None)
             if longitude is None or latitude is None:
                 return Response(
                     {"msg": "Longitude or Latitude is not provided in headers"}
                 )
-
-            clients = list(TempClientLocations.objects.all().values())
-            camera = self.queryset.first()
+            if client_id is None:
+                return Response({"msg": "Client ID is not provided"}, status=400)
+            self.clients[client_id] = {"longitude": longitude, "latitude": latitude}
+            clients = list(self.clients.values())
+            camera = TempRecords.objects.all().first()
             if camera is not None:
                 camera = camera.record.camera
             else:
+                print("Camera is being None: ", camera)
                 return Response({})
             camera_object = Camera.objects.get(pk=camera.pk)
             target_location = {
                 "longitude": camera_object.longitude,
                 "latitude": camera_object.latitude,
             }
+            if not clients or clients is None:
+                return Response({"msg": "No clients connected yet!"}, status=422)
             nearest_location = find_nearest_location(target_location, clients)
+            print(
+                "Float longitude of nearest location: ",
+                float(nearest_location.get("longitude")),
+            )
+            print(
+                "Float latitude of nearest location: ",
+                float(nearest_location.get("latitude")),
+            )
+            print(float(longitude), float(latitude))
+            print(
+                "Condition 1: ",
+                float(nearest_location.get("longitude")) == float(longitude),
+            )
+            print(
+                "Condition 2: ",
+                float(nearest_location.get("latitude")) == float(latitude),
+            )
             if (float(nearest_location.get("longitude")) == float(longitude)) and (
-                float(nearest_location.get("latitude") == float(latitude))
+                float(nearest_location.get("latitude")) == float(latitude)
             ):
-                self.model.objects.all().delete()
-                return Response(self.serializer_class(query).data)
-            return Response({})
+                TempRecords.objects.all().delete()
+                return Response(TempRecordsSerializer(query).data)
+            else:
+                print(
+                    "Full conditiion: ",
+                    float(nearest_location.get("longitude")) == float(longitude), float(nearest_location.get("latitude")) == float(latitude),
+                )
+                return Response({})
         except OperationalError:
             return Response({})
-
-    def destroy(self, request, pk, *args, **kwargs):
-        headers = request.headers
-        if "longitude" not in headers.keys() or "latitude" not in headers.keys():
-            return Response(
-                {"msg": "Required headers not provided: longitude & latitude"}
-            )
-
-        client = TempClientLocations.objects.get(pk=pk)
-        if not client:
-            return Response({"msg": f"Client with id: {pk} not found!"}, status=404)
-        client.delete()
-        return Response(status=204)
 
 
 @api_view(http_method_names=["GET"])
@@ -286,3 +322,12 @@ def fully_fetched_data(request):
     clients = TempClientLocations.objects.all()
     serializer = TempClientLocationsSerializer(instance=clients, many=True)
     return Response(serializer.data, status=200)
+
+
+@api_view(http_method_names=["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def generate_token(request):
+    token = uuid.uuid4()
+    UniqueKey.objects.get_or_create(uuid=token)
+    return Response({"token": token})

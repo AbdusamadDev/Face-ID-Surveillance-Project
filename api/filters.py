@@ -24,7 +24,6 @@ class CriminalsFilter(filters.FilterSet):
     search = filters.CharFilter(method="filter_search")
 
     def filter_search(self, queryset, name, value):
-        print("filterset search function is being executed\n\n\n\n\n")
         return queryset.filter(
             Q(first_name__icontains=value)
             | Q(middle_name__icontains=value)
