@@ -183,8 +183,8 @@ async def image_path_server(websocket, path):
 
 
 async def main():
-    ws_server = await websockets.serve(websocket_server, "0.0.0.0", 4545)
-    img_server = await websockets.serve(image_path_server, "0.0.0.0", 5656)
+    ws_server = await websockets.serve(websocket_server, "0.0.0.0", 5000)
+    img_server = await websockets.serve(image_path_server, "0.0.0.0", 5678)
     camera_streams_task = asyncio.create_task(stream.start_camera_streams())
     reload_encodings_task = asyncio.create_task(
         stream.reload_face_encodings_periodically()
