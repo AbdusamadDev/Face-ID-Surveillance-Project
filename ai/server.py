@@ -85,11 +85,11 @@ class MainStream:
         tasks.append(asyncio.create_task(self.process_frames()))
         await asyncio.gather(*tasks)
 
-    async def reconnect_cameras_periodically(self, interval=60):
+    async def reconnect_cameras_periodically(self, interval=15):
         """Reconnects to all cameras one by one at specified intervals."""
         while True:
-            for url in database.get_camera_urls():
-                asyncio.create_task(self.capture_and_send_frames(url))
+            print("Connecting camera")
+            asyncio.create_task(self.start_camera_streams())
             await asyncio.sleep(interval)
 
     def save_screenshot(self, frame, url, timestamp):
@@ -185,7 +185,6 @@ async def image_path_server(websocket, path):
 async def main():
     ws_server = await websockets.serve(websocket_server, "0.0.0.0", 5000)
     img_server = await websockets.serve(image_path_server, "0.0.0.0", 5678)
-    camera_streams_task = asyncio.create_task(stream.start_camera_streams())
     reload_encodings_task = asyncio.create_task(
         stream.reload_face_encodings_periodically()
     )
@@ -193,7 +192,6 @@ async def main():
     await asyncio.gather(
         ws_server.wait_closed(),
         img_server.wait_closed(),
-        camera_streams_task,
         reload_encodings_task,
         camera_reconnection,
     )

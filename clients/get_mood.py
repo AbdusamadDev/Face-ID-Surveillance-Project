@@ -2,7 +2,7 @@ import time
 import requests
 import random
 
-host = "localhost:8000"
+host = "androidserver.pythonanywhere.com"
 creation = requests.post(
     f"http://{host}/api/mud/",
     json={
@@ -12,10 +12,7 @@ creation = requests.post(
     headers={
         "token": str(
             requests.get(
-                f"http://{host}/android/auth/token/",
-                headers={
-                    "Authorization": "Token 459ede94edbd1c8a1fc1a47194bebaf79523853e"
-                },
+                f"http://{host}/auth/token/",
             )
             .json()
             .get("token")

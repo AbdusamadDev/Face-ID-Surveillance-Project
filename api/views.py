@@ -275,7 +275,6 @@ class AndroidRequestHandlerAPIView(ModelViewSet):
             if camera is not None:
                 camera = camera.record.camera
             else:
-                print("Camera is being None: ", camera)
                 return Response({})
             camera_object = Camera.objects.get(pk=camera.pk)
             target_location = {
@@ -284,34 +283,20 @@ class AndroidRequestHandlerAPIView(ModelViewSet):
             }
             if not clients or clients is None:
                 return Response({"msg": "No clients connected yet!"}, status=422)
-            nearest_location = find_nearest_location(target_location, clients)
-            print(
-                "Float longitude of nearest location: ",
-                float(nearest_location.get("longitude")),
-            )
-            print(
-                "Float latitude of nearest location: ",
-                float(nearest_location.get("latitude")),
-            )
-            print(float(longitude), float(latitude))
-            print(
-                "Condition 1: ",
-                float(nearest_location.get("longitude")) == float(longitude),
-            )
-            print(
-                "Condition 2: ",
-                float(nearest_location.get("latitude")) == float(latitude),
-            )
+            try:
+                nearest_location = find_nearest_location(target_location, clients)
+            except:
+                return Response(
+                    {"msg": "Longitude and Latitude must be in the [-90; 90] range."},
+                    status=400,
+                )
+
             if (float(nearest_location.get("longitude")) == float(longitude)) and (
                 float(nearest_location.get("latitude")) == float(latitude)
             ):
                 TempRecords.objects.all().delete()
                 return Response(TempRecordsSerializer(query).data)
             else:
-                print(
-                    "Full conditiion: ",
-                    float(nearest_location.get("longitude")) == float(longitude), float(nearest_location.get("latitude")) == float(latitude),
-                )
                 return Response({})
         except OperationalError:
             return Response({})
