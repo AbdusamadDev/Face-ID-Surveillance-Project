@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "bazaarsurvellianceproject",
+  "private_key_id": "272cfae17e600da81595a1e4394e09289180181e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQDuoFfs8bIUiAbF\nY9caPGACpNMaGxgS84dMIEMkJnxN5WI/aUQPnPkDWlUs3d+Z+fa4Fq48ilTb6Adc\npBXRYYF0OsNVKOghiakigjueA1IZrVSuJobGZRmhahX/izT70tFoBumhhGtSOOPx\nl5byYCfagcfsA3MweJqZ6JOalnSPONDOP/3F7bahCPrfLry+/d7snTP5VFK6tpJI\nI/3Ph3/zzhNne4y+Dep9tAQVF2A0S9KxZPCPAl5EaCHiCPlEQvZkxSEFnsk+bqIW\n4ODv0cbgOI7oDFjwHiRs9MwZhcR1JRJAbRc6wIgNebiAHnPZ2YC+wdxzHgxHQkoq\nOpHN8Mg3AgMBAAECggEAJeOj0mWWJxhqKtFtiCbp/8F4G38N1YSBiR7eSlEqD5xK\ne1MVkX0VNOkU+SjJpkNAX36Kb+ZvDvPKp3UOWc6npXLnLRBvu1OGXYpcOPzB/n29\nImHPqJTI+w5DK+5InWueAGyIkDLcb5PE7clqGFYYPeO5gMoTcjDUK3f4Z+VX4J2Q\nW8S9vzBtBbs82IWapY1CjF2laPQQAB6TUH6KtvW4JNcOB7OdyYTbkSW7NaM+wLCG\nSo7HT6k9vDXYl1OXSeOUiQt/ujTkK9fL07RrAnmqE778zfh/YrGxGifOjYR/WbMW\ni2TAcXoAKS/0FNXrPm9D6Fs7fjqZqr5zL8pJyc9G0QKBgQD5hjz7Tfynp+T42Lu3\n9JiINDfKBIo2ulYDlTFaGceVCjom4h5pWMctj///3HaAeZeQ9ryNwN/FrA4bLK2c\nJN8jioyAjSB8wukul2VfX6kVqN6xcy1oAjdlZ7diI60OgMQMN+hfoJPzR9WSWhZb\noCIAKwWMwPQ6cC184KGn3Q/hwwKBgQD00bPBq7LDWGPbwGxY/ySimX4FRfyEsx2C\nLN/2SKhF+OZEbVADiKMQbMLRT/BsshyKq22LCr0n1jWYwu6pGpiO43hsX2KKENnw\nlSy3K/dgvFGifQ49jqsRlfiP9hETSWPSdROBq7p9XyZbRIl+tJAIlPAG1ylH8SfY\nTYvitK2EfQKBgF7nHX5/VN73TnEPDaaTkwgKxEVDoMXb7ScDsXeRYoVfFGsBiYuL\nxoWfxUAtO6z1kh4CmghYGUP3go33WjiPFYdRBMtH4dlR0Jp13op9ubORPNHE+roa\nTbN11RuwcfuYIfh7sxfb3SmkYqh9Nw+2QfhKZJv6L2mijMp4LUPJImc9AoGAV/F0\ndx+saYu441muEhIlINuub0qCuVB2Syq/kQLsn6YXYYE6+un8WYwYN4RVw1X/9rg5\n83Z6GHNUcXmkrc5F+x4vRg7FoP8IqumLVIlQpclAMfRmRyqWvQx4a45i9+CnIRS5\nWx1LMnoZlzN5iLBoBQ0rY+mqhJNWUtcYZumsYykCgYAes51h7cWeR1QurMDCdrEi\ngXGaTSWvHQJbizmWTUQ+qBEB0Tjeld49ZsEIdnGHtWQD3/PIe498LCEy8reFjySY\nnyJnpzpAxXe5wKdorihEXr93HbQ+Uv6uayq+bOjvb4obCyXg3wttzhhih54MWmLB\ngL5wJajr3HAJUleVaPjtiA==\n-----END PRIVATE KEY-----\n",
+  "client_email": "firebase-adminsdk-4fnb8@bazaarsurvellianceproject.iam.gserviceaccount.com",
+  "client_id": "115048608069065129762",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-4fnb8%40bazaarsurvellianceproject.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

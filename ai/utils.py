@@ -18,7 +18,6 @@ def host():
         public_ip = "Unable to get IP"
     finally:
         s.close()
-    # return "10.119.6.226:8000"
     return public_ip
 
 

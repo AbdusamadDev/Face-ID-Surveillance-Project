@@ -1,6 +1,2 @@
-autostart using nginx
-better performance using multiprocessing
-websocket ==> http interval
-autodetect of ip addresses
 results should be displayed correctly to the client, problem is that the data is being
 displayed after second glance to the camera
