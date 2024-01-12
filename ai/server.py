@@ -1,48 +1,52 @@
+from imutils.video import VideoStream
+from urllib.parse import urlparse
+from datetime import datetime
+import websockets
+import logging
 import asyncio
 import json
-import tracemalloc
-from datetime import datetime
-import logging
-import websockets
-from urllib.parse import urlparse
-from imutils.video import VideoStream
 import cv2
 import os
 
-from ai.models import Database
-from ai.path import abs_path
-from ai.train import FaceTrainer
-from ai.utils import host_address
 from ai.face_recognition import FaceRecognition
 from ai.socket_manager import WebSocketManager
 from ai.alert_manager import AlertManager
+from ai.utils import host_address
+from ai.train import FaceTrainer
+from ai.models import Database
+from dotenv import load_dotenv
 
-tracemalloc.start()
+load_dotenv()
 logging.basicConfig(level=logging.DEBUG)
+root_dir = os.getenv("BASE_DIR")
 
 
 class MainStream:
-    def __init__(self, root_dir, camera_urls):
-        self.root_dir = root_dir
+    def __init__(self):
         self.database = Database()
         self.websocket_manager = WebSocketManager()
-        self.urls = camera_urls
-        self.trainer = FaceTrainer(root_dir)
+        print(root_dir)
+        self.trainer = FaceTrainer(os.path.join(root_dir, "media/criminals"))
         self.index = self.trainer.index
         self.known_face_names = self.trainer.known_face_names
         self.face_model = self.trainer.face_model
         self.alert_manager = AlertManager(self.websocket_manager)
         self.face_recognition = FaceRecognition(self)
-        self.processing_queue = asyncio.Queue()  # Queue for processing frames
+        self.processing_queue = asyncio.Queue()
+        self.tasks = []
 
     async def capture_and_send_frames(self, url):
-        """Captures frames and sends them to the processing queue."""
         cap = VideoStream(url).start()
-        while True:
-            frame = cap.read()
-            if frame is not None:
-                await self.processing_queue.put((frame, url))
-            await asyncio.sleep(0.1)
+        try:
+            while True:
+                frame = cap.read()
+                if frame is not None:
+                    await self.processing_queue.put((frame, url))
+                await asyncio.sleep(0.1)
+        except asyncio.CancelledError:
+            print(f"Task for {url} has been cancelled.")
+        finally:
+            cap.stop()
 
     async def process_frames(self):
         """Processes frames from all cameras."""
@@ -63,45 +67,55 @@ class MainStream:
             if (
                 current_time - last_screenshot_time
             ).total_seconds() >= screenshot_interval:
+                print("\n"*5)
                 self.save_screenshot(frame, url, current_time)
                 last_screenshot_time = current_time
 
     async def reload_face_encodings_periodically(self):
         while True:
             self.index, self.known_face_names = self.trainer.load_face_encodings(
-                self.root_dir
+                os.path.join(root_dir, "media/criminals")
             )
             (
                 self.face_recognition.index,
                 self.face_recognition.known_face_names,
-            ) = self.trainer.load_face_encodings(self.root_dir)
+            ) = self.trainer.load_face_encodings(
+                os.path.join(root_dir, "media/criminals")
+            )
             await asyncio.sleep(60)
 
     async def start_camera_streams(self):
-        """Start frame capture tasks for all cameras and the central processing task."""
         tasks = [
-            asyncio.create_task(self.capture_and_send_frames(url)) for url in self.urls
+            asyncio.create_task(self.capture_and_send_frames(url))
+            for url in database.get_camera_urls()
         ]
         tasks.append(asyncio.create_task(self.process_frames()))
         await asyncio.gather(*tasks)
 
-    async def reconnect_cameras_periodically(self, interval=15):
-        """Reconnects to all cameras one by one at specified intervals."""
+    async def reconnect_cameras_periodically(self, interval=5):
         while True:
-            print("Connecting camera")
-            asyncio.create_task(self.start_camera_streams())
+            print("Length of tasks: ", len(self.tasks))
+            for task in self.tasks:
+                task.cancel()
+
+            await asyncio.gather(*self.tasks, return_exceptions=True)
+            self.tasks = []  # Clear the tasks list after they are cancelled
+            task = asyncio.create_task(self.start_camera_streams())
+            self.tasks.append(task)
+            print("Length of tasks: ", len(self.tasks))
             await asyncio.sleep(interval)
 
     def save_screenshot(self, frame, url, timestamp):
         """Saves a screenshot with a specific naming format, including only the IP address from the URL."""
         parsed_url = urlparse(url)
-        ip_address = parsed_url.hostname  # Extracts the hostname/IP address
-
+        ip_address = parsed_url.hostname
         formatted_time = timestamp.strftime("%Y-%m-%d|%H-%M-%S")
         filename = f"{formatted_time}|{ip_address}.jpg"
-        directory = os.path.join("../media/screenshots/suspends")
+        directory = os.path.join(root_dir)
         os.makedirs(directory, exist_ok=True)  # Ensure directory exists
         filepath = os.path.join(directory, filename)
+        print(filename, filepath, directory)
+        print("\n" * 5)
         cv2.imwrite(filepath, frame)
 
 
@@ -145,7 +159,7 @@ def list_image_paths(directory):
 async def send_image_paths(websocket, path):
     sent_image_paths = set()
     connection_time = datetime.now()
-    screenshots_dir = "../media/screenshots/suspends/"
+    screenshots_dir = "/media/screenshots/suspends/"
 
     while True:
         current_image_files = set(
@@ -199,7 +213,7 @@ async def main():
 
 if __name__ == "__main__":
     database = Database()
-    urls = database.get_camera_urls()
-    stream = MainStream(abs_path() + "media/criminals", urls)
+
+    stream = MainStream()
     logging.basicConfig(level=logging.INFO)
     asyncio.run(main())
