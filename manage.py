@@ -2,11 +2,12 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from threading import Thread
 
 
 def main():
     """Run administrative tasks."""
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:
@@ -18,5 +19,10 @@ def main():
     execute_from_command_line(sys.argv)
 
 
-if __name__ == '__main__':
+def run_ai():
+    os.system("python3 -m ai.server")
+
+
+if __name__ == "__main__":
+    Thread(target=run_ai).start()
     main()
