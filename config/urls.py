@@ -27,7 +27,7 @@ schema_view = get_schema_view(
 
 router = DefaultRouter()
 router.register(r"criminals", CriminalsAPIView)
-router.register(r"camera", CameraAPIView)
+router.register(r"cameras", CameraAPIView)
 router.register(r"records", CriminalsRecordsAPIView)
 router.register(r"mud", AndroidRequestHandlerAPIView)
 
