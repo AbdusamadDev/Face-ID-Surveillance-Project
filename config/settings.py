@@ -4,7 +4,7 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-i12t5tychmv_9vr3yff(suf@hjncm^!*zd2jsnzp&8@^7ru6ah"
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS = ["*"]
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -31,7 +31,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 ROOT_URLCONF = "config.urls"
-# CORS_ALLOWED_ORIGINS = ["*"]
 CORS_ALLOW_ALL_ORIGINS = True
 TEMPLATES = [
     {

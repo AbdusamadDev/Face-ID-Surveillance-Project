@@ -12,3 +12,7 @@ python-dotenv
 celery
 redis
 django
+django-cors-headers
+drf-yasg
+python-jose
+geopy

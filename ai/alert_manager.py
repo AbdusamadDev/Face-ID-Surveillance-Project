@@ -1,6 +1,6 @@
-from models import Database
+from ai.models import Database
 from datetime import datetime
-from utils import save_screenshot, host_address
+from ai.utils import save_screenshot, host_address
 import json
 
 

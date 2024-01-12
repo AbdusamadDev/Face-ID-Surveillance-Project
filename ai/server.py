@@ -9,13 +9,13 @@ from imutils.video import VideoStream
 import cv2
 import os
 
-from models import Database
-from path import abs_path
-from train import FaceTrainer
-from utils import host_address
-from face_recognition import FaceRecognition
-from socket_manager import WebSocketManager
-from alert_manager import AlertManager
+from ai.models import Database
+from ai.path import abs_path
+from ai.train import FaceTrainer
+from ai.utils import host_address
+from ai.face_recognition import FaceRecognition
+from ai.socket_manager import WebSocketManager
+from ai.alert_manager import AlertManager
 
 tracemalloc.start()
 logging.basicConfig(level=logging.DEBUG)
