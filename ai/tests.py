@@ -1,133 +1,90 @@
-from imutils.video import VideoStream
-from urllib.parse import urlparse
-from datetime import datetime
-import logging
-import time
+import torch
+import insightface
 import cv2
 import os
-import threading
-from ai.face_recognition import FaceRecognition
-from ai.socket_manager import WebSocketManager
-from ai.alert_manager import AlertManager
-from ai.utils import host_address
-from ai.train import FaceTrainer
-from ai.models import Database
-from dotenv import load_dotenv
-
-load_dotenv()
-logging.basicConfig(level=logging.DEBUG)
-root_dir = os.getenv("BASE_DIR")
+import numpy as np
+import faiss
+import time
 
 
-class MainStream:
-    def __init__(self):
-        self.database = Database()
-        self.websocket_manager = WebSocketManager()
-        print(root_dir)
-        self.trainer = FaceTrainer(os.path.join(root_dir, "media/criminals"))
-        self.index = self.trainer.index
-        self.known_face_names = self.trainer.known_face_names
-        self.face_model = self.trainer.face_model
-        self.alert_manager = AlertManager(self.websocket_manager)
-        self.face_recognition = FaceRecognition(self)
-        self.processing_queue = []
-        self.tasks = []
+class FaceTrainer:
+    def __init__(self, root_dir):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def capture_and_send_frames(self, url):
-        cap = VideoStream(url).start()
         try:
-            while True:
-                frame = cap.read()
-                if frame is not None:
-                    self.processing_queue.append((frame, url))
-        except KeyboardInterrupt:
-            print(f"Task for {url} has been cancelled.")
-        finally:
-            cap.stop()
+            self.face_model = insightface.app.FaceAnalysis()
+            ctx_id = 0
+            self.face_model.prepare(ctx_id=ctx_id)
+        except Exception as e:
+            print(f"Failed to load models: {e}")
+            raise
 
-    def process_frames(self):
-        """Processes frames from all cameras."""
-        last_screenshot_time = datetime.now()
-        screenshot_interval = 5
+        self.index, self.known_face_names = self.load_face_encodings(root_dir)
+
+    def load_face_encodings(self, root_dir):
+        known_face_encodings = []
+        known_face_names = []
+        for dir_name in os.listdir(root_dir):
+            dir_path = os.path.join(root_dir, dir_name)
+            if os.path.isdir(dir_path):
+                for file_name in os.listdir(dir_path):
+                    if file_name.endswith((".jpg", ".png")):
+                        image_path = os.path.join(dir_path, file_name)
+                        image = cv2.imread(image_path)
+                        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                        faces = self.face_model.get(image)
+
+                        if faces:
+                            for face in faces:
+                                embedding = face.embedding
+                                known_face_encodings.append(embedding)
+                                known_face_names.append(dir_name)
+
+        known_face_encodings = np.array(known_face_encodings)
+        index = faiss.IndexFlatL2(known_face_encodings.shape[1])
+        index.add(known_face_encodings)
+        return index, known_face_names
+
+    def search_similar_face(self, query_embedding, threshold=0.6):
+        D, I = self.index.search(np.array([query_embedding]), 1)
+        if D[0][0] <= threshold:
+            similar_face_name = self.known_face_names[I[0][0]]
+            return similar_face_name
+        else:
+            return None
+
+    def process_frame(self, frame, threshold=0.6):
+        query_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        query_faces = self.face_model.get(query_image)
+
+        if not query_faces:
+            print("No faces found in the current frame.")
+            return
+
+        for face in query_faces:
+            query_embedding = face.embedding
+            result = self.search_similar_face(query_embedding, threshold)
+
+            if result:
+                print(f"Similar face in the folder: {result}")
+            else:
+                print("No similar face found in the current frame.")
+
+    def process_camera_frames(
+        self,
+        camera_index="rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch41/main/av_stream",
+        threshold=600,
+    ):
+        camera = cv2.VideoCapture(camera_index)
+
         while True:
-            if self.processing_queue:
-                frame, url = self.processing_queue.pop(0)
-                self.face_recognition.current_frame = frame
-                current_time = datetime.now()
-                faces = self.face_model.get(frame)
-                results = [self.face_recognition.process_face(face) for face in faces]
-                for name in results:
-                    if name is not None:
-                        self.alert_manager.handle_alert(
-                            frame=frame, detected_face=name, url=url
-                        )
-                if (
-                    current_time - last_screenshot_time
-                ).total_seconds() >= screenshot_interval:
-                    print("\n"*5)
-                    self.save_screenshot(frame, url, current_time)
-                    last_screenshot_time = current_time
-
-    def reload_face_encodings_periodically(self):
-        while True:
-            self.index, self.known_face_names = self.trainer.load_face_encodings(
-                os.path.join(root_dir, "media/criminals")
-            )
-            (
-                self.face_recognition.index,
-                self.face_recognition.known_face_names,
-            ) = self.trainer.load_face_encodings(
-                os.path.join(root_dir, "media/criminals")
-            )
-            time.sleep(60)
-
-    def start_camera_streams(self):
-        for url in database.get_camera_urls():
-            print("Connected: ", url)
-            self.capture_and_send_frames(url)
+            ret, frame = camera.read()
+            self.process_frame(frame, threshold)
 
 
+# Example usage:
+root_directory = "/home/ubuntu/project/BazaarSurveillance/media/criminals/"
+face_trainer = FaceTrainer(root_directory)
 
-    # def reconnect_cameras_periodically(self, interval=5):
-    #     while True:
-    #         print("Length of threads: ", threading.active_count())
-    #         for thread in threading.enumerate():
-    #             if thread != threading.current_thread():
-    #                 thread.join()
-
-    #         self.processing_queue.clear()
-    #         self.start_camera_streams()
-    #         print("Length of threads: ", threading.active_count())
-    #         time.sleep(interval)
-
-    def save_screenshot(self, frame, url, timestamp):
-        """Saves a screenshot with a specific naming format, including only the IP address from the URL."""
-        parsed_url = urlparse(url)
-        ip_address = parsed_url.hostname
-        formatted_time = timestamp.strftime("%Y-%m-%d|%H-%M-%S")
-        filename = f"{formatted_time}|{ip_address}.jpg"
-        directory = os.path.join(root_dir, "media/screenshots/suspends")
-        os.makedirs(directory, exist_ok=True)  # Ensure directory exists
-        filepath = os.path.join(directory, filename)
-        print(filename, filepath, directory)
-        print("\n" * 5)
-        cv2.imwrite(filepath, frame)
-
-
-
-
-    # reload_encodings_thread = threading.Thread(target=stream.reload_face_encodings_periodically)
-    # camera_reconnection_thread = threading.Thread(target=stream.reconnect_cameras_periodically)
-    # camera_reconnection_thread.start()
-    # reload_encodings_thread.start()
-    
-
-
-if __name__ == "__main__":
-    database = Database()
-    stream = MainStream()
-    logging.basicConfig(level=logging.INFO)
-    frame_thread = threading.Thread(target=stream.start_camera_streams)
-    frame_thread.start()
-    base_thread = threading.Thread(target=stream.process_frames)
-    base_thread.start()
+# Process frames from the camera with default camera index (0)
+face_trainer.process_camera_frames()

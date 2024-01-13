@@ -36,13 +36,14 @@ class MainStream:
         self.tasks = []
 
     async def capture_and_send_frames(self, url):
-        cap = VideoStream(url).start()
+        cap = VideoStream(url, codec='h264', fps=30).start()
+
         try:
             while True:
                 frame = cap.read()
                 if frame is not None:
-                    await self.processing_queue.put((frame, url))
-                await asyncio.sleep(0.1)
+                    asyncio.create_task(self.process_frame(frame, url))
+                await asyncio.sleep(0.01)  # Adjust the sleep time based on your needs
         except asyncio.CancelledError:
             print(f"Task for {url} has been cancelled.")
         finally:
@@ -92,7 +93,7 @@ class MainStream:
         tasks.append(asyncio.create_task(self.process_frames()))
         await asyncio.gather(*tasks)
 
-    async def reconnect_cameras_periodically(self, interval=5):
+    async def reconnect_cameras_periodically(self, interval=30):
         while True:
             print("Length of tasks: ", len(self.tasks))
             for task in self.tasks:
