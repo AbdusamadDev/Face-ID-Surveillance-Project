@@ -7,6 +7,7 @@ import faiss
 import time
 import threading
 
+from ai.models import Database
 
 class CameraProcessor(threading.Thread):
     def __init__(self, face_trainer, camera_index, threshold, disappearance_timeout=5):
@@ -92,7 +93,6 @@ class Surveillance:
         threshold=0.6,
         camera_index=0,
         last_detection_time=None,
-        save_path="screenshots",
     ):
         if frame is None:
             print(f"Error: Unable to read frame from the camera {camera_index}.")
@@ -109,7 +109,6 @@ class Surveillance:
             query_embedding = face.embedding
             result = self.search_similar_face(query_embedding, threshold)
             if result:
-                print("Last detection time: ", last_detection_time)
                 self.check_disappeared_faces(last_detection_time, face_id=result)
                 current_time = time.time()
                 if (
@@ -128,14 +127,16 @@ class Surveillance:
                     )
                     print(f"Similar face in the folder: {result}")
                     last_detection_time[result] = current_time
-                    self.save_screenshot(frame, result, save_path)
+                    timestamp = time.strftime("%Y/%m/%d")
+                    path = os.path.join("media/screenshots/criminals/", result, str(timestamp))
+                    self.save_screenshot(frame, path)
 
-    def save_screenshot(self, frame, face_name, save_path):
+    def save_screenshot(self, frame, save_path):
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-        timestamp = time.strftime("%Y%m%d_%H%M%S")
-        filename = f"{face_name}_{timestamp}.png"
+        timestamp = time.strftime("%Y-%m-%d:%H-%M-%S")
+        filename = f"{timestamp}.jpg"
         screenshot_path = os.path.join(save_path, filename)
 
         cv2.imwrite(screenshot_path, frame)
@@ -146,34 +147,20 @@ class Surveillance:
         last_seen = last_detection_time.get(face_id)
         if last_seen is not None:
             if (current_time - last_seen) > 5:
+                print(last_detection_time[face_id])
                 del last_detection_time[face_id]
-        # disappeared_faces = [
-        #     face
-        #     for face, last_time in last_detection_time.items()
-        #     if (current_time - last_time) > 5
-        # ]
-        # for face in disappeared_faces:
-        #     print(f"Face {face} has disappeared.")
-        #     del last_detection_time[face]
 
-    def process_camera_frames_parallel(self, camera_urls, threshold=500):
+    def process_camera_frames_parallel(self, threshold=520):
         threads = []
-        for camera_url in camera_urls:
+        
+        for camera_url in database.get_camera_urls():
             thread = CameraProcessor(self, camera_url, threshold)
             threads.append(thread)
 
         for thread in threads:
             thread.start()
 
-
+database = Database()
 root_directory = "/home/ubuntu/project/BazaarSurveillance/media/criminals/"
 face_trainer = Surveillance(root_directory)
-
-# Specify multiple camera URLs
-camera_urls = [
-    f"rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch48/main/av_stream",
-    f"rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch41/main/av_stream"
-    # for i in  [5,41,44,48,29,30,31,34,35,37]
-]
-
-face_trainer.process_camera_frames_parallel(camera_urls)
+face_trainer.process_camera_frames_parallel()
