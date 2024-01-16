@@ -18,12 +18,14 @@ from rest_framework.decorators import (
 from api.utils import host_address, find_nearest_location, get_unique_key
 from api.pagination import (
     CriminalsRecordsPagination,
+    WebTempRecordsPagination,
     CriminalsPagination,
     CameraPagination,
 )
 from api.serializers import (
     TempClientLocationsSerializer,
     CriminalsRecordsSerializer,
+    WebTempRecordsSerializer,
     TempRecordsSerializer,
     CriminalsSerializer,
     CameraSerializer,
@@ -36,6 +38,7 @@ from api.filters import (
 from api.models import (
     TempClientLocations,
     CriminalsRecords,
+    WebTempRecords,
     TempRecords,
     Criminals,
     UniqueKey,
@@ -59,8 +62,8 @@ class CameraAPIView(ModelViewSet):
     lookup_field = "pk"
     filterset_class = CameraFilter
     pagination_class = CameraPagination
-    # authentication_classes = [TokenAuthentication]
-    # permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
 
 
 class CriminalsAPIView(ModelViewSet):
@@ -298,6 +301,22 @@ class AndroidRequestHandlerAPIView(ModelViewSet):
                 return Response({})
         except OperationalError:
             return Response({})
+
+
+class WebTempRecordsViewSet(ModelViewSet):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    model = WebTempRecords
+    queryset = WebTempRecords.objects.all()
+    pagination_class = WebTempRecordsPagination
+    serializer_class = WebTempRecordsSerializer
+
+    def list(self, request, *args, **kwargs):
+        query = self.queryset
+        serializer = self.serializer_class(instance=query, many=True)
+        stored_data = serializer.data
+        query.delete()
+        return Response(data={"data": stored_data})
 
 
 @api_view(http_method_names=["GET"])

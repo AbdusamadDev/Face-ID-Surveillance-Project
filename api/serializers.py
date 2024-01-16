@@ -4,6 +4,7 @@ from api.utils import host_address
 from api.models import (
     TempClientLocations,
     CriminalsRecords,
+    WebTempRecords,
     TempRecords,
     Criminals,
     Camera,
@@ -101,3 +102,9 @@ class TempClientLocationsSerializer(serializers.ModelSerializer):
     class Meta:
         fields = "__all__"
         model = TempClientLocations
+
+
+class WebTempRecordsSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = "__all__"
+        model = WebTempRecords

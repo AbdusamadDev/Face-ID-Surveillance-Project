@@ -11,3 +11,7 @@ class CriminalsPagination(PageNumberPagination):
 
 class CriminalsRecordsPagination(PageNumberPagination):
     page_size = 8
+
+
+class WebTempRecordsPagination(PageNumberPagination):
+    page_size = 4

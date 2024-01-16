@@ -68,3 +68,10 @@ class TempClientLocations(models.Model):
 
 class UniqueKey(models.Model):
     uuid = models.UUIDField()
+
+
+class WebTempRecords(models.Model):
+    camera = models.ForeignKey(to=Camera, on_delete=models.CASCADE)
+    criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE)
+    image = models.URLField()
+    date_created = models.DateTimeField(auto_now_add=True)

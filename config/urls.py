@@ -29,7 +29,8 @@ router = DefaultRouter()
 router.register(r"criminals", CriminalsAPIView)
 router.register(r"camera", CameraAPIView)
 router.register(r"records", CriminalsRecordsAPIView)
-router.register(r"mud", AndroidRequestHandlerAPIView)
+router.register(r"mud", AndroidRequestHandlerAPIView),
+router.register(r"web-results", WebTempRecordsViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),

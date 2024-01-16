@@ -8,6 +8,7 @@ import time
 import threading
 import os
 from dotenv import load_dotenv
+from datetime import datetime
 
 from ai.models import Database
 from ai.server import WebSocketServer
@@ -145,6 +146,13 @@ class Surveillance:
                         "media/screenshots/criminals/", result, str(timestamp)
                     )
                     self.save_screenshot(frame, path)
+                    print("Camera index::::::::: ", database.get_camera(camera_index))
+                    database.add_web_temp_records(
+                        result,
+                        database.get_camera(camera_index).get("id"),
+                        screenshot_url="http://0.0.0.0:8000/" + path,
+                        date_created=datetime.now(),
+                    )
 
     def save_screenshot(self, frame, save_path):
         if not os.path.exists(save_path):

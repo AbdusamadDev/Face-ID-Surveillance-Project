@@ -134,6 +134,20 @@ class Database:
             return True
         return False
 
+    def add_web_temp_records(
+        self, criminal_id, camera_id, screenshot_url, date_created
+    ):
+        conn = self._db_connect()
+        cursor = conn.cursor()
+        self.cursor = cursor
+        cursor.execute(
+            """INSERT INTO api_webtemprecords (criminal_id, camera_id, 
+            image, date_created) VALUES (%s, %s, %s, %s);""",
+            (criminal_id, camera_id, screenshot_url, date_created),
+        )
+        conn.commit()
+        conn.close()
+
 
 if __name__ == "__main__":
     database = Database()
