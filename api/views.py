@@ -1,12 +1,12 @@
 #  ############## Django and Django Rest Framework imports ################
 from rest_framework.authentication import TokenAuthentication
+from django.http import JsonResponse, StreamingHttpResponse
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import ModelViewSet
 from rest_framework.request import HttpRequest
 from rest_framework.response import Response
 from django.db.utils import OperationalError
 from rest_framework.views import APIView
-from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.decorators import (
     api_view,
@@ -46,11 +46,13 @@ from api.models import (
 )
 
 #  #################### Standard libraries imports ########################
+from imutils.video import VideoStream
 from math import ceil
 import shutil
 import time
 import uuid
 import os
+import cv2
 
 
 class CameraAPIView(ModelViewSet):
@@ -333,3 +335,36 @@ def generate_token(request):
     token = uuid.uuid4()
     UniqueKey.objects.get_or_create(uuid=token)
     return Response({"token": token})
+
+
+class VideoStreamAPIView(APIView):
+    def get(self, request, *args, **kwargs):
+        url = request.query_params.get("url")
+        if not url:
+            return StreamingHttpResponse(
+                "URL parameter is missing", status=400, content_type="text/plain"
+            )
+
+        vs = VideoStream(url).start()
+        time.sleep(0.5)  # Warm-up time for the camera
+
+        def frame_generator():
+            while True:
+                frame = vs.read()
+                if frame is None:
+                    break
+
+                (flag, encodedImage) = cv2.imencode(".jpg", frame)
+                if not flag:
+                    continue
+
+                yield (
+                    b"--frame\r\n"
+                    b"Content-Type: image/jpeg\r\n\r\n"
+                    + bytearray(encodedImage)
+                    + b"\r\n"
+                )
+
+        return StreamingHttpResponse(
+            frame_generator(), content_type="multipart/x-mixed-replace; boundary=frame"
+        )

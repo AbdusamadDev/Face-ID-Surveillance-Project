@@ -19,8 +19,9 @@ load_dotenv()
 
 
 class CameraProcessor(threading.Thread):
-    def __init__(self, camera_index, threshold, disappearance_timeout=5):
+    def __init__(self, face_trainer, camera_index, threshold, disappearance_timeout=5):
         super(CameraProcessor, self).__init__()
+        self.face_trainer = face_trainer
         self.camera_index = camera_index
         self.threshold = threshold
         self.disappearance_timeout = disappearance_timeout
@@ -44,7 +45,7 @@ class CameraProcessor(threading.Thread):
                         f"Error: Could not read frame from camera {self.camera_index}"
                     )
                     break
-                face_trainer.process_frame(
+                self.face_trainer.process_frame(
                     frame, self.threshold, self.camera_index, self.last_detection_time
                 )
                 if (time.time() - current_time) > 5:
@@ -177,7 +178,7 @@ class Surveillance:
         threads = []
 
         for camera_url in urls:
-            thread = CameraProcessor(camera_url, threshold)
+            thread = CameraProcessor(self, camera_url, threshold)
             threads.append(thread)
 
         for thread in threads:
@@ -204,10 +205,10 @@ class Surveillance:
             print("Pending connect cameras: ", pending_cameras)
 
 
-path = os.getenv("BASE_DIR")
-root_directory = os.path.join(path, "media/criminals/")
-face_trainer = Surveillance(root_directory)
 if __name__ == "__main__":
+    path = os.getenv("BASE_DIR")
+    root_directory = os.path.join(path, "media/criminals/")
+    face_trainer = Surveillance(root_directory)
     database = Database()
     reload_face_encodings_thread = threading.Thread(
         target=face_trainer.reload_face_encodings
