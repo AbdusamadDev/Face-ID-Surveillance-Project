@@ -6,13 +6,20 @@ import numpy as np
 import faiss
 import time
 import threading
+import os
+from dotenv import load_dotenv
 
 from ai.models import Database
+from ai.server import WebSocketServer
+from ai.utils import save_screenshot
+
+
+load_dotenv()
+
 
 class CameraProcessor(threading.Thread):
-    def __init__(self, face_trainer, camera_index, threshold, disappearance_timeout=5):
+    def __init__(self, camera_index, threshold, disappearance_timeout=5):
         super(CameraProcessor, self).__init__()
-        self.face_trainer = face_trainer
         self.camera_index = camera_index
         self.threshold = threshold
         self.disappearance_timeout = disappearance_timeout
@@ -23,10 +30,12 @@ class CameraProcessor(threading.Thread):
             camera = cv2.VideoCapture(self.camera_index)
             if not camera.isOpened():
                 print(f"Error: Could not open camera {self.camera_index}")
-                time.sleep(2)
+                print("Reconnecting after a minute...")
+                time.sleep(60)
                 continue
             else:
-                print("Connected")
+                print("Connected to camera: ", self.camera_index)
+            current_time = time.time()
             while True:
                 ret, frame = camera.read()
                 if not ret:
@@ -34,9 +43,16 @@ class CameraProcessor(threading.Thread):
                         f"Error: Could not read frame from camera {self.camera_index}"
                     )
                     break
-                self.face_trainer.process_frame(
+                face_trainer.process_frame(
                     frame, self.threshold, self.camera_index, self.last_detection_time
                 )
+                if (time.time() - current_time) > 5:
+                    save_screenshot(
+                        frame=frame,
+                        camera_url=self.camera_index,
+                        path=os.path.join(path, "media/screenshots/suspends"),
+                    )
+                    current_time = time.time()
             camera.release()
             time.sleep(1)
 
@@ -47,6 +63,7 @@ class Surveillance:
 
         try:
             self.face_model = insightface.app.FaceAnalysis()
+            self.root_dir = root_dir
             ctx_id = 0
             self.face_model.prepare(ctx_id=ctx_id)
         except Exception as e:
@@ -101,7 +118,6 @@ class Surveillance:
         query_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         query_faces = self.face_model.get(query_image)
 
-
         if not query_faces:
             return
 
@@ -111,10 +127,7 @@ class Surveillance:
             if result:
                 self.check_disappeared_faces(last_detection_time, face_id=result)
                 current_time = time.time()
-                if (
-                    result not in last_detection_time
-                    or (current_time - last_detection_time[result]) > threshold
-                ):
+                if result not in last_detection_time:
                     rect_color = (0, 255, 0)  # Green color
                     rect_thickness = 2
                     bbox = face.bbox.astype(int)
@@ -128,7 +141,9 @@ class Surveillance:
                     print(f"Similar face in the folder: {result}")
                     last_detection_time[result] = current_time
                     timestamp = time.strftime("%Y/%m/%d")
-                    path = os.path.join("media/screenshots/criminals/", result, str(timestamp))
+                    path = os.path.join(
+                        "media/screenshots/criminals/", result, str(timestamp)
+                    )
                     self.save_screenshot(frame, path)
 
     def save_screenshot(self, frame, save_path):
@@ -146,21 +161,58 @@ class Surveillance:
         current_time = time.time()
         last_seen = last_detection_time.get(face_id)
         if last_seen is not None:
-            if (current_time - last_seen) > 5:
+            if (current_time - last_seen) > 10:
                 print(last_detection_time[face_id])
                 del last_detection_time[face_id]
 
-    def process_camera_frames_parallel(self, threshold=520):
+    def process_camera_frames_parallel(self, urls, threshold=520):
         threads = []
-        
-        for camera_url in database.get_camera_urls():
-            thread = CameraProcessor(self, camera_url, threshold)
+
+        for camera_url in urls:
+            thread = CameraProcessor(camera_url, threshold)
             threads.append(thread)
 
         for thread in threads:
             thread.start()
 
-database = Database()
-root_directory = "/home/ubuntu/project/BazaarSurveillance/media/criminals/"
+    def reload_face_encodings(self):
+        while True:
+            print("Length of face encodings: ", self.index.ntotal)
+            self.index.reset()
+            self.known_face_names.clear()
+            self.index, self.known_face_names = self.load_face_encodings(self.root_dir)
+            time.sleep(5)
+
+    def reconnect_cameras(self):
+        pending_cameras = []
+        while True:
+            current_camera_urls = database.get_camera_urls()
+            self.process_camera_frames_parallel(pending_cameras)
+            pending_cameras.clear()
+            time.sleep(5)
+            for camera in database.get_camera_urls():
+                if camera not in current_camera_urls:
+                    pending_cameras.append(camera)
+            print("Pending connect cameras: ", pending_cameras)
+
+
+path = os.getenv("BASE_DIR")
+root_directory = os.path.join(path, "media/criminals/")
 face_trainer = Surveillance(root_directory)
-face_trainer.process_camera_frames_parallel()
+if __name__ == "__main__":
+    database = Database()
+    reload_face_encodings_thread = threading.Thread(
+        target=face_trainer.reload_face_encodings
+    )
+    reload_face_encodings_thread.start()
+    reconnect_cameras_thread = threading.Thread(target=face_trainer.reconnect_cameras)
+    reconnect_cameras_thread.start()
+    face_trainer.process_camera_frames_parallel(database.get_camera_urls())
+    import logging
+
+    try:
+        logging.basicConfig(level=logging.INFO)
+        server = WebSocketServer(addr=("0.0.0.0", 11223))
+        server.run()
+    except KeyboardInterrupt:
+        logging.info(" Shutting down gracefully!")

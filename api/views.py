@@ -43,9 +43,7 @@ from api.models import (
 )
 
 #  #################### Standard libraries imports ########################
-from string import ascii_letters
 from math import ceil
-import random
 import shutil
 import time
 import uuid
@@ -61,8 +59,8 @@ class CameraAPIView(ModelViewSet):
     lookup_field = "pk"
     filterset_class = CameraFilter
     pagination_class = CameraPagination
-    authentication_classes = [TokenAuthentication]
-    permission_classes = [IsAuthenticated]
+    # authentication_classes = [TokenAuthentication]
+    # permission_classes = [IsAuthenticated]
 
 
 class CriminalsAPIView(ModelViewSet):

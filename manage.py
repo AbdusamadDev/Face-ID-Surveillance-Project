@@ -2,7 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
-from threading import Thread
+# from threading import Thread
 
 
 def main():
@@ -19,10 +19,10 @@ def main():
     execute_from_command_line(sys.argv)
 
 
-def run_ai():
-    os.system("python3 -m ai.server")
+# def run_ai():
+#     os.system("python3 -m ai.server")
 
 
 if __name__ == "__main__":
-    Thread(target=run_ai).start()
+    # Thread(target=run_ai).start()
     main()
