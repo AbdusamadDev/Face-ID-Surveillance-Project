@@ -18,45 +18,45 @@ from ai.utils import save_screenshot
 load_dotenv()
 
 
-class CameraProcessor(threading.Thread):
-    def __init__(self, face_trainer, camera_index, threshold, disappearance_timeout=5):
-        super(CameraProcessor, self).__init__()
-        self.face_trainer = face_trainer
-        self.camera_index = camera_index
-        self.threshold = threshold
-        self.disappearance_timeout = disappearance_timeout
-        self.last_detection_time = {}
+# class CameraProcessor(threading.Thread):
+#     def __init__(self, face_trainer, camera_index, threshold, disappearance_timeout=5):
+#         super(CameraProcessor, self).__init__()
+#         self.face_trainer = face_trainer
+#         self.camera_index = camera_index
+#         self.threshold = threshold
+#         self.disappearance_timeout = disappearance_timeout
+#         self.last_detection_time = {}
 
-    def run(self):
-        while True:
-            camera = cv2.VideoCapture(self.camera_index)
-            if not camera.isOpened():
-                print(f"Error: Could not open camera {self.camera_index}")
-                print("Reconnecting after a minute...")
-                time.sleep(60)
-                continue
-            else:
-                print("Connected to camera: ", self.camera_index)
-            current_time = time.time()
-            while True:
-                ret, frame = camera.read()
-                if not ret:
-                    print(
-                        f"Error: Could not read frame from camera {self.camera_index}"
-                    )
-                    break
-                self.face_trainer.process_frame(
-                    frame, self.threshold, self.camera_index, self.last_detection_time
-                )
-                if (time.time() - current_time) > 5:
-                    save_screenshot(
-                        frame=frame,
-                        camera_url=self.camera_index,
-                        path=os.path.join(path, "media/screenshots/suspends"),
-                    )
-                    current_time = time.time()
-            camera.release()
-            time.sleep(1)
+#     def run(self):
+#         while True:
+#             camera = cv2.VideoCapture(self.camera_index)
+#             if not camera.isOpened():
+#                 print(f"Error: Could not open camera {self.camera_index}")
+#                 print("Reconnecting after a minute...")
+#                 time.sleep(60)
+#                 continue
+#             else:
+#                 print("Connected to camera: ", self.camera_index)
+#             current_time = time.time()
+#             while True:
+#                 ret, frame = camera.read()
+#                 if not ret:
+#                     print(
+#                         f"Error: Could not read frame from camera {self.camera_index}"
+#                     )
+#                     break
+#                 self.process_frame(
+#                     frame, self.threshold, self.camera_index, self.last_detection_time
+#                 )
+#                 if (time.time() - current_time) > 5:
+#                     save_screenshot(
+#                         frame=frame,
+#                         camera_url=self.camera_index,
+#                         path=os.path.join(path, "media/screenshots/suspends"),
+#                     )
+#                     current_time = time.time()
+#             camera.release()
+#             time.sleep(1)
 
 
 class Surveillance:
@@ -68,6 +68,8 @@ class Surveillance:
             self.root_dir = root_dir
             ctx_id = 0
             self.face_model.prepare(ctx_id=ctx_id)
+            self.disappearance_timeout = 5
+            self.last_detection_time = {}
         except Exception as e:
             print(f"Failed to load models: {e}")
             raise
@@ -109,7 +111,6 @@ class Surveillance:
     def process_frame(
         self,
         frame,
-        threshold=0.6,
         camera_index=0,
         last_detection_time=None,
     ):
@@ -125,7 +126,7 @@ class Surveillance:
 
         for face in query_faces:
             query_embedding = face.embedding
-            result = self.search_similar_face(query_embedding, threshold)
+            result = self.search_similar_face(query_embedding, 520)
             if result:
                 self.check_disappeared_faces(last_detection_time, face_id=result)
                 current_time = time.time()
@@ -174,14 +175,15 @@ class Surveillance:
                 print(last_detection_time[face_id])
                 del last_detection_time[face_id]
 
-    def process_camera_frames_parallel(self, urls, threshold=520):
+    def process_camera_frames_parallel(self, urls):
         threads = []
 
         for camera_url in urls:
-            thread = CameraProcessor(self, camera_url, threshold)
+            thread = threading.Thread(target=self.bind, args=(camera_url,))
             threads.append(thread)
 
         for thread in threads:
+            time.sleep(1)
             thread.start()
 
     def reload_face_encodings(self):
@@ -203,6 +205,37 @@ class Surveillance:
                 if camera not in current_camera_urls:
                     pending_cameras.append(camera)
             print("Pending connect cameras: ", pending_cameras)
+
+    def bind(self, url):
+        while True:
+            camera = cv2.VideoCapture(url)
+            if not camera.isOpened():
+                print(f"Error: Could not open camera {url}")
+                print("Reconnecting after a minute...")
+                time.sleep(60)
+                continue
+            else:
+                print("Connected to camera: ", url)
+            current_time = time.time()
+            while True:
+                ret, frame = camera.read()
+                if not ret:
+                    print(
+                        f"Error: Could not read frame from camera {url}"
+                    )
+                    break
+                self.process_frame(
+                    frame, url, self.last_detection_time
+                )
+                if (time.time() - current_time) > 5:
+                    save_screenshot(
+                        frame=frame,
+                        camera_url=url,
+                        path=os.path.join(path, "media/screenshots/suspends"),
+                    )
+                    current_time = time.time()
+            camera.release()
+            time.sleep(1)
 
 
 if __name__ == "__main__":
