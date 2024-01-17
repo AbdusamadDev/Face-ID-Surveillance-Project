@@ -2,7 +2,7 @@ import requests
 
 
 image = open("main.jpg", "rb")
-for i in range(60):
+for i in range(25,30):
     print(
         requests.post(
             "http://0.0.0.0:7000/api/camera/",

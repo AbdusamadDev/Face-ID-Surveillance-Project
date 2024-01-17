@@ -105,6 +105,8 @@ class TempClientLocationsSerializer(serializers.ModelSerializer):
 
 
 class WebTempRecordsSerializer(serializers.ModelSerializer):
+    criminal = CriminalsSerializer()
+    camera = CameraSerializer() 
     class Meta:
         fields = "__all__"
         model = WebTempRecords

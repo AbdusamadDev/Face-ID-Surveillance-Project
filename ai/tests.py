@@ -71,6 +71,7 @@ class Surveillance:
     def process_frame(self, data):
         frame = data.get("frame")
         camera_index = data.get("camera_url")
+        start=  time.time()
         last_detection_time = data.get("last_detection_time", {})
         if frame is None:
             print(f"Error: Unable to read frame from the camera {camera_index}.")
@@ -170,6 +171,7 @@ class Surveillance:
     def bind(self, url):
         while True:
             camera = cv2.VideoCapture(url)
+
             if not camera.isOpened():
                 print(f"Error: Could not open camera {url}")
                 print("Reconnecting after a minute...")
@@ -180,6 +182,7 @@ class Surveillance:
 
             current_time = time.time()
             while True:
+                start = time.time()
                 ret, frame = camera.read()
                 if not ret:
                     print(f"Error: Could not read frame from camera {url}")
@@ -199,11 +202,10 @@ class Surveillance:
                         path=os.path.join(path, "media/screenshots/suspends"),
                     )
                     current_time = time.time()
-
+                end = time.time()
+                print("Elapesed time ---------------->> ", end - start)
             camera.release()
             time.sleep(1)
-    
-    
 
 
 if __name__ == "__main__":
@@ -217,7 +219,7 @@ if __name__ == "__main__":
     reload_face_encodings_thread.start()
     reconnect_cameras_thread = threading.Thread(target=face_trainer.reconnect_cameras)
     reconnect_cameras_thread.start()
-    face_trainer.bind(database.get_camera_urls())
+    face_trainer.process_camera_frames_parallel(database.get_camera_urls())
     import logging
 
     try:
