@@ -5,7 +5,7 @@ image = open("main.jpg", "rb")
 for i in range(60):
     print(
         requests.post(
-            "http://0.0.0.0:5555/api/camera/",
+            "http://0.0.0.0:7000/api/camera/",
             data={
                 "name": f"Camera {i}",
                 "url": f"rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch{i}/main/av_stream",
