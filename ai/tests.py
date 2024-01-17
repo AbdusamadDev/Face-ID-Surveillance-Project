@@ -9,6 +9,7 @@ import threading
 import os
 from dotenv import load_dotenv
 from datetime import datetime
+import concurrent.futures
 
 from ai.models import Database
 from ai.server import WebSocketServer
@@ -16,47 +17,6 @@ from ai.utils import save_screenshot
 
 
 load_dotenv()
-
-
-# class CameraProcessor(threading.Thread):
-#     def __init__(self, face_trainer, camera_index, threshold, disappearance_timeout=5):
-#         super(CameraProcessor, self).__init__()
-#         self.face_trainer = face_trainer
-#         self.camera_index = camera_index
-#         self.threshold = threshold
-#         self.disappearance_timeout = disappearance_timeout
-#         self.last_detection_time = {}
-
-#     def run(self):
-#         while True:
-#             camera = cv2.VideoCapture(self.camera_index)
-#             if not camera.isOpened():
-#                 print(f"Error: Could not open camera {self.camera_index}")
-#                 print("Reconnecting after a minute...")
-#                 time.sleep(60)
-#                 continue
-#             else:
-#                 print("Connected to camera: ", self.camera_index)
-#             current_time = time.time()
-#             while True:
-#                 ret, frame = camera.read()
-#                 if not ret:
-#                     print(
-#                         f"Error: Could not read frame from camera {self.camera_index}"
-#                     )
-#                     break
-#                 self.process_frame(
-#                     frame, self.threshold, self.camera_index, self.last_detection_time
-#                 )
-#                 if (time.time() - current_time) > 5:
-#                     save_screenshot(
-#                         frame=frame,
-#                         camera_url=self.camera_index,
-#                         path=os.path.join(path, "media/screenshots/suspends"),
-#                     )
-#                     current_time = time.time()
-#             camera.release()
-#             time.sleep(1)
 
 
 class Surveillance:
@@ -108,12 +68,10 @@ class Surveillance:
         else:
             return None
 
-    def process_frame(
-        self,
-        frame,
-        camera_index=0,
-        last_detection_time=None,
-    ):
+    def process_frame(self, data):
+        frame = data.get("frame")
+        camera_index = data.get("camera_url")
+        last_detection_time = data.get("last_detection_time", {})
         if frame is None:
             print(f"Error: Unable to read frame from the camera {camera_index}.")
             return
@@ -175,17 +133,6 @@ class Surveillance:
                 print(last_detection_time[face_id])
                 del last_detection_time[face_id]
 
-    def process_camera_frames_parallel(self, urls):
-        threads = []
-
-        for camera_url in urls:
-            thread = threading.Thread(target=self.bind, args=(camera_url,))
-            threads.append(thread)
-
-        for thread in threads:
-            time.sleep(1)
-            thread.start()
-
     def reload_face_encodings(self):
         while True:
             print("Length of face encodings: ", self.index.ntotal)
@@ -206,6 +153,20 @@ class Surveillance:
                     pending_cameras.append(camera)
             print("Pending connect cameras: ", pending_cameras)
 
+    def process_camera_frames_parallel(self, urls):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=70) as executor:
+            futures = {
+                executor.submit(self.bind, camera_url): camera_url
+                for camera_url in urls
+            }
+
+            for future in concurrent.futures.as_completed(futures):
+                camera_url = futures[future]
+                try:
+                    future.result()
+                except Exception as e:
+                    print(f"Error processing camera {camera_url}: {e}")
+
     def bind(self, url):
         while True:
             camera = cv2.VideoCapture(url)
@@ -216,17 +177,21 @@ class Surveillance:
                 continue
             else:
                 print("Connected to camera: ", url)
+
             current_time = time.time()
             while True:
                 ret, frame = camera.read()
                 if not ret:
-                    print(
-                        f"Error: Could not read frame from camera {url}"
-                    )
+                    print(f"Error: Could not read frame from camera {url}")
                     break
-                self.process_frame(
-                    frame, url, self.last_detection_time
-                )
+
+                data = {
+                    "camera_url": url,
+                    "frame": frame,
+                    "last_detection_time": self.last_detection_time,
+                }
+                self.process_frame(data)
+
                 if (time.time() - current_time) > 5:
                     save_screenshot(
                         frame=frame,
@@ -234,8 +199,11 @@ class Surveillance:
                         path=os.path.join(path, "media/screenshots/suspends"),
                     )
                     current_time = time.time()
+
             camera.release()
             time.sleep(1)
+    
+    
 
 
 if __name__ == "__main__":
@@ -249,7 +217,7 @@ if __name__ == "__main__":
     reload_face_encodings_thread.start()
     reconnect_cameras_thread = threading.Thread(target=face_trainer.reconnect_cameras)
     reconnect_cameras_thread.start()
-    face_trainer.process_camera_frames_parallel(database.get_camera_urls())
+    face_trainer.bind(database.get_camera_urls())
     import logging
 
     try:
@@ -257,4 +225,4 @@ if __name__ == "__main__":
         server = WebSocketServer(addr=("0.0.0.0", 11223))
         server.run()
     except KeyboardInterrupt:
-        logging.info(" Shutting down gracefully!")
+        logging.info("Shutting down gracefully!")
