@@ -79,7 +79,7 @@ class CriminalsAPIView(ModelViewSet):
     permission_classes = [IsAuthenticated]
     model = Criminals
     serializer_class = CriminalsSerializer
-    queryset = Criminals.objects.all()
+    queryset = Criminals.objects.all().order_by("-date_created")
     lookup_field = "pk"
     filterset_class = CriminalsFilter
     pagination_class = CriminalsPagination

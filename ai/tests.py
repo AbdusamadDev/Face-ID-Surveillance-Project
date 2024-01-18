@@ -107,11 +107,18 @@ class Surveillance:
                         "media/screenshots/criminals/", result, str(timestamp)
                     )
                     self.save_screenshot(frame, path)
+                    print("Adding to database")
                     self.database.add_web_temp_records(
                         result,
                         self.database.get_camera(camera_index).get("id"),
                         screenshot_url="http://0.0.0.0:8000/" + path,
                         date_created=datetime.now(),
+                    )
+                    self.database.insert_records(
+                        image="http://0.0.0.0:8000/" + path,
+                        criminal=result,
+                        camera=self.database.get_camera(camera_index).get("id"),
+                        date_recorded=datetime.now()
                     )
 
     def save_screenshot(self, frame, save_path):
@@ -133,6 +140,7 @@ class Surveillance:
 
     def reload_face_encodings(self):
         while True:
+            print("Everything working")
             self.index.reset()
             self.known_face_names.clear()
             self.index, self.known_face_names = self.load_face_encodings(self.root_dir)
@@ -188,6 +196,7 @@ class Surveillance:
                 self.process_frame(data)
 
                 if (time.time() - current_time) > 5:
+                    print("screenshotttttttttttttttttttttt")
                     save_screenshot(
                         frame=frame,
                         camera_url=url,
@@ -209,7 +218,10 @@ if __name__ == "__main__":
     reload_face_encodings_thread.start()
     reconnect_cameras_thread = threading.Thread(target=face_trainer.reconnect_cameras)
     reconnect_cameras_thread.start()
-    face_trainer.process_camera_frames_parallel(database.get_camera_urls())
+    threading.Thread(
+        target=face_trainer.process_camera_frames_parallel,
+        args=(database.get_camera_urls(),)
+        ).start()
     import logging
 
     try:

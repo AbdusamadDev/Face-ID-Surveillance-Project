@@ -236,6 +236,7 @@ load_dotenv()
 
 class WebSocketServer:
     def __init__(self, addr: tuple) -> None:
+        logging.basicConfig(level=logging.INFO)
         self.addr = addr
         self.database = Database()
         self.clients = dict()
@@ -342,11 +343,9 @@ class WebSocketServer:
                 await self.disconnect(uuid)
                 break
 
-    async def run_server(self):
+    def run(self):
         run_server = websockets.serve(self.handle_server, *self.addr)
         logging.info(f" Websocket server started running on {self.addr}")
         logging.info(" Ctrl+c to get out of loop")
-        await run_server
-
-    def run(self):
-        asyncio.run(self.run_server())
+        asyncio.get_event_loop().run_until_complete(run_server)
+        asyncio.get_event_loop().run_forever()
