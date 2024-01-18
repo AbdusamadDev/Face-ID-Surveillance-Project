@@ -221,6 +221,7 @@
 
 
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 from datetime import datetime
 from models import Database
@@ -277,11 +278,16 @@ class WebSocketServer:
                         {
                             "image": str(
                                 "http://0.0.0.0:8000/media/screenshots/suspends/"
-                                + newest_image_path
-                            )
+                                + newest_image_path,
+                            ),
+                            "date": str(datetime.now()),
+                            "camera": self.database.get_by_similar(
+                                partial_url=urlparse(newest_image_path)
+                            ),
                         }
                     )
                 )
+                print("This is fuckin url: ", urlparse(newest_image_path))
                 await asyncio.sleep(5)
             except RuntimeError as error:
                 logging.info(" Number of clients: " + str(len(self.clients)))

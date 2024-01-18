@@ -226,7 +226,7 @@ if __name__ == "__main__":
 
     try:
         logging.basicConfig(level=logging.INFO)
-        server = WebSocketServer(addr=("0.0.0.0", 11223))
+        server = WebSocketServer(addr=("0.0.0.0", 11222))
         server.run()
     except KeyboardInterrupt:
         logging.info("Shutting down gracefully!")
