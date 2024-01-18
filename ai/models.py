@@ -66,6 +66,15 @@ class Database:
             rows_dict = {label: row for label, row in zip(labels, rows[0])}
             return rows_dict
         return None
+    
+    def get_camera_by_id(self, pk):
+        query = "SELECT * FROM api_camera WHERE id=%s"
+        rows = self._execute_query(query, (pk,))
+        labels = ["id", "name", "url", "longitude", "latitude", "image"]
+        if rows is not None:
+            rows_dict = {label: row for label, row in zip(labels, rows[0])}
+            return rows_dict
+        return None
 
     def get_camera_urls(self):
         query = "SELECT url FROM api_camera"

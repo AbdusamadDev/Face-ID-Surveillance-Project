@@ -196,11 +196,13 @@ class Surveillance:
                 self.process_frame(data)
 
                 if (time.time() - current_time) > 5:
-                    print("screenshotttttttttttttttttttttt")
                     save_screenshot(
                         frame=frame,
                         camera_url=url,
-                        path=os.path.join(path, "media/screenshots/suspends"),
+                        path=os.path.join(
+                            path, 
+                            f"media/screenshots/suspends/{self.database.get_camera(url).get('id')}"
+                        ),
                     )
                     current_time = time.time()
             camera.release()
