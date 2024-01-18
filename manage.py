@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 """Django's command-line utility for administrative tasks."""
-import os
 import sys
-# from threading import Thread
+import os
 
 
 def main():
@@ -19,10 +18,5 @@ def main():
     execute_from_command_line(sys.argv)
 
 
-# def run_ai():
-#     os.system("python3 -m ai.server")
-
-
 if __name__ == "__main__":
-    # Thread(target=run_ai).start()
     main()

@@ -11,16 +11,16 @@ from dotenv import load_dotenv
 from datetime import datetime
 import concurrent.futures
 
-from ai.models import Database
-from ai.server import WebSocketServer
-from ai.utils import save_screenshot
+from models import Database
+from server import WebSocketServer
+from utils import save_screenshot
 
 
 load_dotenv()
 
 
 class Surveillance:
-    def __init__(self, root_dir):
+    def __init__(self, root_dir, database):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         try:
@@ -31,9 +31,9 @@ class Surveillance:
             self.disappearance_timeout = 5
             self.last_detection_time = {}
         except Exception as e:
-            print(f"Failed to load models: {e}")
             raise
 
+        self.database = database
         self.index, self.known_face_names = self.load_face_encodings(root_dir)
 
     def load_face_encodings(self, root_dir):
@@ -71,7 +71,6 @@ class Surveillance:
     def process_frame(self, data):
         frame = data.get("frame")
         camera_index = data.get("camera_url")
-        start=  time.time()
         last_detection_time = data.get("last_detection_time", {})
         if frame is None:
             print(f"Error: Unable to read frame from the camera {camera_index}.")
@@ -90,6 +89,8 @@ class Surveillance:
                 self.check_disappeared_faces(last_detection_time, face_id=result)
                 current_time = time.time()
                 if result not in last_detection_time:
+                    print(f"Result: ", result, "\n" * 5)
+
                     rect_color = (0, 255, 0)  # Green color
                     rect_thickness = 2
                     bbox = face.bbox.astype(int)
@@ -100,17 +101,15 @@ class Surveillance:
                         rect_color,
                         rect_thickness,
                     )
-                    print(f"Similar face in the folder: {result}")
                     last_detection_time[result] = current_time
                     timestamp = time.strftime("%Y/%m/%d")
                     path = os.path.join(
                         "media/screenshots/criminals/", result, str(timestamp)
                     )
                     self.save_screenshot(frame, path)
-                    print("Camera index::::::::: ", database.get_camera(camera_index))
-                    database.add_web_temp_records(
+                    self.database.add_web_temp_records(
                         result,
-                        database.get_camera(camera_index).get("id"),
+                        self.database.get_camera(camera_index).get("id"),
                         screenshot_url="http://0.0.0.0:8000/" + path,
                         date_created=datetime.now(),
                     )
@@ -124,19 +123,16 @@ class Surveillance:
         screenshot_path = os.path.join(save_path, filename)
 
         cv2.imwrite(screenshot_path, frame)
-        print(f"Screenshot saved: {screenshot_path}")
 
     def check_disappeared_faces(self, last_detection_time, face_id):
         current_time = time.time()
         last_seen = last_detection_time.get(face_id)
         if last_seen is not None:
             if (current_time - last_seen) > 10:
-                print(last_detection_time[face_id])
                 del last_detection_time[face_id]
 
     def reload_face_encodings(self):
         while True:
-            print("Length of face encodings: ", self.index.ntotal)
             self.index.reset()
             self.known_face_names.clear()
             self.index, self.known_face_names = self.load_face_encodings(self.root_dir)
@@ -145,14 +141,13 @@ class Surveillance:
     def reconnect_cameras(self):
         pending_cameras = []
         while True:
-            current_camera_urls = database.get_camera_urls()
+            current_camera_urls = self.database.get_camera_urls()
             self.process_camera_frames_parallel(pending_cameras)
             pending_cameras.clear()
-            time.sleep(5)
-            for camera in database.get_camera_urls():
+            time.sleep(60)
+            for camera in self.database.get_camera_urls():
                 if camera not in current_camera_urls:
                     pending_cameras.append(camera)
-            print("Pending connect cameras: ", pending_cameras)
 
     def process_camera_frames_parallel(self, urls):
         with concurrent.futures.ThreadPoolExecutor(max_workers=70) as executor:
@@ -173,8 +168,6 @@ class Surveillance:
             camera = cv2.VideoCapture(url)
 
             if not camera.isOpened():
-                print(f"Error: Could not open camera {url}")
-                print("Reconnecting after a minute...")
                 time.sleep(60)
                 continue
             else:
@@ -182,7 +175,6 @@ class Surveillance:
 
             current_time = time.time()
             while True:
-                start = time.time()
                 ret, frame = camera.read()
                 if not ret:
                     print(f"Error: Could not read frame from camera {url}")
@@ -202,8 +194,6 @@ class Surveillance:
                         path=os.path.join(path, "media/screenshots/suspends"),
                     )
                     current_time = time.time()
-                end = time.time()
-                print("Elapesed time ---------------->> ", end - start)
             camera.release()
             time.sleep(1)
 
@@ -211,8 +201,8 @@ class Surveillance:
 if __name__ == "__main__":
     path = os.getenv("BASE_DIR")
     root_directory = os.path.join(path, "media/criminals/")
-    face_trainer = Surveillance(root_directory)
     database = Database()
+    face_trainer = Surveillance(root_directory, database)
     reload_face_encodings_thread = threading.Thread(
         target=face_trainer.reload_face_encodings
     )

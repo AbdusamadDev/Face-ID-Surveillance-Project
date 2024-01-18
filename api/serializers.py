@@ -106,7 +106,17 @@ class TempClientLocationsSerializer(serializers.ModelSerializer):
 
 class WebTempRecordsSerializer(serializers.ModelSerializer):
     criminal = CriminalsSerializer()
-    camera = CameraSerializer() 
+    camera = CameraSerializer()
+
     class Meta:
         fields = "__all__"
         model = WebTempRecords
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        return {
+            "identity": representation["criminal"],
+            "camera": representation["camera"],
+            "image": representation["image"],
+            "date_created": representation["date_created"],
+        }

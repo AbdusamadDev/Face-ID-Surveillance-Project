@@ -223,7 +223,7 @@
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
 from dotenv import load_dotenv
 from datetime import datetime
-from ai.models import Database
+from models import Database
 import websockets
 import logging
 import asyncio
@@ -342,9 +342,11 @@ class WebSocketServer:
                 await self.disconnect(uuid)
                 break
 
-    def run(self):
+    async def run_server(self):
         run_server = websockets.serve(self.handle_server, *self.addr)
         logging.info(f" Websocket server started running on {self.addr}")
         logging.info(" Ctrl+c to get out of loop")
-        asyncio.get_event_loop().run_until_complete(run_server)
-        asyncio.get_event_loop().run_forever()
+        await run_server
+
+    def run(self):
+        asyncio.run(self.run_server())

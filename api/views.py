@@ -318,7 +318,9 @@ class WebTempRecordsViewSet(ModelViewSet):
         serializer = self.serializer_class(instance=query, many=True)
         stored_data = serializer.data
         query.delete()
-        return Response(data={"data": stored_data})
+        if stored_data:
+            return Response(data=stored_data[0])
+        return Response({}, 200)
 
 
 @api_view(http_method_names=["GET"])
