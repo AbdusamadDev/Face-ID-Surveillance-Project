@@ -14,11 +14,8 @@ temporary token: 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l
 
 
 
-Frontend
-Backend django
-running on startup
-
-
-websocket
-ai 
-not running on startup
+Frontend                frontend.service
+Backend django          ServiceAI
+websocket               websocket_server.service
+ai                      facial_recognition.service
+running on startup      

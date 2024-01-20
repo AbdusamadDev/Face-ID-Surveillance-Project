@@ -66,7 +66,7 @@ class WebSocketServer:
                         json.dumps(
                             {
                                 "image": str(
-                                    f"http://{os.getenv('BASE_HOST')}:8000:8000/media/screenshots/suspends/{pk}/"
+                                    f"http://{os.getenv('BASE_HOST')}:8000/media/screenshots/suspends/{pk}/"
                                     + newest_image_path,
                                 ),
                                 "date": str(datetime.now()),
@@ -81,10 +81,12 @@ class WebSocketServer:
                 logging.info(" Number of clients: " + str(len(self.clients)))
                 await self.disconnect(key)
                 break
+            except IndexError:
+                continue
             except Exception as error:
                 logging.error(str(error))
-                await self.disconnect(key)
-                break
+                await self.connect(input_client)
+                continue
 
     async def handle_server(self, websocket, path):
         while True:
@@ -142,6 +144,7 @@ class WebSocketServer:
         asyncio.get_event_loop().run_until_complete(run_server)
         asyncio.get_event_loop().run_forever()
 
+
 if __name__ == "__main__":
     print("Server starting")
     try:
@@ -150,5 +153,3 @@ if __name__ == "__main__":
         server.run()
     except KeyboardInterrupt:
         logging.info("Shutting down gracefully!")
-
-# 192.168.1.252

@@ -100,10 +100,7 @@ class TempRecordsSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-
-        # Move 'image_path' inside 'criminal' dictionary
         representation["criminal"]["image_path"] = representation.pop("image_path")
-
         return representation
 
 

@@ -11,8 +11,8 @@ import time
 import cv2
 import os
 
-from ai.utils import save_screenshot
-from ai.models import Database
+from utils import save_screenshot
+from models import Database
 
 
 load_dotenv()
