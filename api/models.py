@@ -58,7 +58,10 @@ class CriminalsRecords(models.Model):
 
 
 class TempRecords(models.Model):
-    record = models.ForeignKey(to=CriminalsRecords, on_delete=models.CASCADE)
+    criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE, default=1)
+    camera = models.ForeignKey(to=Camera, on_delete=models.CASCADE, default=1)
+    image_path = models.URLField(default="https://www.image-test.com")
+    date_recorded = models.DateTimeField(auto_now_add=True)
 
 
 class TempClientLocations(models.Model):
@@ -73,5 +76,5 @@ class UniqueKey(models.Model):
 class WebTempRecords(models.Model):
     camera = models.ForeignKey(to=Camera, on_delete=models.CASCADE)
     criminal = models.ForeignKey(to=Criminals, on_delete=models.CASCADE)
-    image = models.URLField()
+    image_path = models.URLField()
     date_created = models.DateTimeField(auto_now_add=True)

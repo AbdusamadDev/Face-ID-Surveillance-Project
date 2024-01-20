@@ -1,8 +1,18 @@
 import psycopg2
 import os
 from dotenv import load_dotenv
+from datetime import datetime
+import logging
 
 load_dotenv()
+try:
+    logging.basicConfig(
+        filename=f"{os.getenv('BASE_DIR')}server.log",
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+except Exception as e:
+    print(f"Error during logging setup: {e}")
 
 
 class Database:
@@ -66,7 +76,7 @@ class Database:
             rows_dict = {label: row for label, row in zip(labels, rows[0])}
             return rows_dict
         return None
-    
+
     def get_camera_by_id(self, pk):
         query = "SELECT * FROM api_camera WHERE id=%s"
         rows = self._execute_query(query, (pk,))
@@ -98,15 +108,71 @@ class Database:
             (image, date_recorded, criminal, camera),
         )
         connection.commit()
+        cursor.execute(
+            """
+            SELECT * FROM api_temprecords 
+            WHERE criminal_id = %s
+            """,
+            (criminal,),
+        )
+        android_record = cursor.fetchone()
+        logging.info(str(android_record))
+        cursor.execute(
+            """
+            SELECT * FROM api_webtemprecords 
+            WHERE criminal_id = %s
+            """,
+            (criminal,),
+        )
+        web_records = cursor.fetchone()
+        logging.info(str(web_records))
+        if android_record:
+            # Update the existing record
+            cursor.execute(
+                """
+                UPDATE api_temprecords
+                SET image_path = %s, date_recorded = %s, camera_id = %s
+                WHERE criminal_id = %s
+                """,
+                (image, date_recorded, camera, criminal),
+            )
+        else:
+            cursor.execute(
+                """
+                INSERT INTO api_temprecords 
+                (image_path, date_recorded, criminal_id, camera_id)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (image, date_recorded, criminal, camera),
+            )
+        if web_records:
+            cursor.execute(
+                """
+                UPDATE api_webtemprecords
+                SET image_path = %s, date_created = %s, camera_id = %s
+                WHERE criminal_id = %s
+                """,
+                (image, date_recorded, camera, criminal),
+            )
+        else:
+            # Insert a new record
+
+            cursor.execute(
+                """
+                INSERT INTO api_webtemprecords 
+                (image_path, date_created, criminal_id, camera_id)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (image, date_recorded, criminal, camera),
+            )
+
+        connection.commit()
 
     def get_by_similar(self, partial_url):
         query = """SELECT * FROM api_camera WHERE url ILIKE %s;"""
         connection = self._db_connect()
         cursor = connection.cursor()
-
-        # Add '%' wildcard before and after the partial_url to find similar matches
         like_pattern = f"%{partial_url}%"
-
         cursor.execute(query, (like_pattern,))
         results = cursor.fetchall()
         cursor.close()
@@ -160,4 +226,5 @@ class Database:
 
 if __name__ == "__main__":
     database = Database()
-    print(database.is_authenticated("459ede94edbd1c8a1fc1a47194bebaf79523853e"))
+
+    database.insert_records("qweqwe", datetime.now(), 1, 2)

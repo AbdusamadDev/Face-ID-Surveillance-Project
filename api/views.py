@@ -15,7 +15,6 @@ from rest_framework.decorators import (
 )
 
 #  ######################### Local apps imports ###########################
-from api.utils import host_address, find_nearest_location, get_unique_key
 from api.pagination import (
     CriminalsRecordsPagination,
     WebTempRecordsPagination,
@@ -44,15 +43,30 @@ from api.models import (
     UniqueKey,
     Camera,
 )
+from api.utils import (
+    find_nearest_location,
+    get_unique_key,
+    host_address,
+)
 
 #  #################### Standard libraries imports ########################
 from imutils.video import VideoStream
 from math import ceil
+import logging
 import shutil
 import time
 import uuid
 import os
 import cv2
+
+try:
+    logging.basicConfig(
+        filename=f"{os.getenv('BASE_DIR')}server.log",
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+except Exception as e:
+    print(f"Error during logging setup: {e}")
 
 
 class CameraAPIView(ModelViewSet):
@@ -276,7 +290,8 @@ class AndroidRequestHandlerAPIView(ModelViewSet):
             clients = list(self.clients.values())
             camera = TempRecords.objects.all().first()
             if camera is not None:
-                camera = camera.record.camera
+                logging.info(f"Camera: {camera}")
+                camera = camera.camera
             else:
                 return Response({})
             camera_object = Camera.objects.get(pk=camera.pk)

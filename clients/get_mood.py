@@ -2,22 +2,14 @@ import time
 import requests
 import random
 
-host = "androidserver.pythonanywhere.com"
+host = "0.0.0.0:8000"
 creation = requests.post(
     f"http://{host}/api/mud/",
     json={
         "longitude": str(random.randint(1, 90)),
         "latitude": str(random.randint(1, 90)),
     },
-    headers={
-        "token": str(
-            requests.get(
-                f"http://{host}/auth/token/",
-            )
-            .json()
-            .get("token")
-        )
-    },
+    headers={"token": "cff79fb0-3aec-444f-8321-b6bdfec1c339"},
 )
 print("Client created: ", creation.json())
 print(creation.status_code)

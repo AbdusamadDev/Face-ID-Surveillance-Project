@@ -1,22 +1,29 @@
 import torch
-import insightface
-import cv2
-import os
-import numpy as np
-import faiss
-import time
-import threading
-import os
 from dotenv import load_dotenv
 from datetime import datetime
 import concurrent.futures
+import numpy as np
+import insightface
+import threading
+import logging
+import faiss
+import time
+import cv2
+import os
 
-from models import Database
-from server import WebSocketServer
-from utils import save_screenshot
+from ai.utils import save_screenshot
+from ai.models import Database
 
 
 load_dotenv()
+try:
+    logging.basicConfig(
+        filename=f"{os.getenv('BASE_DIR')}server.log",
+        level=logging.DEBUG,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+except Exception as e:
+    print(f"Error during logging setup: {e}")
 
 
 class Surveillance:
@@ -73,7 +80,9 @@ class Surveillance:
         camera_index = data.get("camera_url")
         last_detection_time = data.get("last_detection_time", {})
         if frame is None:
-            print(f"Error: Unable to read frame from the camera {camera_index}.")
+            logging.error(
+                f"Error: Unable to read frame from the camera {camera_index}."
+            )
             return
 
         query_image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -89,7 +98,7 @@ class Surveillance:
                 self.check_disappeared_faces(last_detection_time, face_id=result)
                 current_time = time.time()
                 if result not in last_detection_time:
-                    print(f"Result: ", result, "\n" * 5)
+                    logging.info(f"Result: " + result)
 
                     rect_color = (0, 255, 0)  # Green color
                     rect_thickness = 2
@@ -106,19 +115,15 @@ class Surveillance:
                     path = os.path.join(
                         "media/screenshots/criminals/", result, str(timestamp)
                     )
-                    self.save_screenshot(frame, path)
-                    print("Adding to database")
-                    self.database.add_web_temp_records(
-                        result,
-                        self.database.get_camera(camera_index).get("id"),
-                        screenshot_url="http://0.0.0.0:8000/" + path,
-                        date_created=datetime.now(),
-                    )
+                    filename = self.save_screenshot(frame, path)
+                    logging.info(f"Path of image: {path}")
+                    logging.info(f"file name: {filename}")
+                    logging.info(f"Adding to database: {result}")
                     self.database.insert_records(
-                        image="http://0.0.0.0:8000/" + path,
+                        image="http://0.0.0.0:8000/" + path + "/" + filename,
                         criminal=result,
                         camera=self.database.get_camera(camera_index).get("id"),
-                        date_recorded=datetime.now()
+                        date_recorded=datetime.now(),
                     )
 
     def save_screenshot(self, frame, save_path):
@@ -127,9 +132,11 @@ class Surveillance:
 
         timestamp = time.strftime("%Y-%m-%d:%H-%M-%S")
         filename = f"{timestamp}.jpg"
-        screenshot_path = os.path.join(save_path, filename)
-
+        screenshot_path = os.path.join(os.getenv("BASE_DIR"), save_path, filename)
+        logging.info(f"Full path: {screenshot_path}")
+        logging.info(f"Frame existence: {frame is None}")
         cv2.imwrite(screenshot_path, frame)
+        return filename
 
     def check_disappeared_faces(self, last_detection_time, face_id):
         current_time = time.time()
@@ -140,7 +147,6 @@ class Surveillance:
 
     def reload_face_encodings(self):
         while True:
-            print("Everything working")
             self.index.reset()
             self.known_face_names.clear()
             self.index, self.known_face_names = self.load_face_encodings(self.root_dir)
@@ -159,33 +165,32 @@ class Surveillance:
 
     def process_camera_frames_parallel(self, urls):
         with concurrent.futures.ThreadPoolExecutor(max_workers=70) as executor:
-            futures = {
-                executor.submit(self.bind, camera_url): camera_url
-                for camera_url in urls
-            }
-
+            futures = dict()
+            for camera_url in urls:
+                futures[executor.submit(self.bind, camera_url)] = camera_url
+                time.sleep(1)
             for future in concurrent.futures.as_completed(futures):
                 camera_url = futures[future]
                 try:
                     future.result()
                 except Exception as e:
-                    print(f"Error processing camera {camera_url}: {e}")
+                    logging.error(f"Error processing camera {camera_url}: {e}")
 
     def bind(self, url):
         while True:
             camera = cv2.VideoCapture(url)
-
+            logging.info(f"Connected to camera url: {url}")
             if not camera.isOpened():
                 time.sleep(60)
                 continue
             else:
-                print("Connected to camera: ", url)
+                logging.info("Connected to camera: " + url)
 
             current_time = time.time()
             while True:
                 ret, frame = camera.read()
                 if not ret:
-                    print(f"Error: Could not read frame from camera {url}")
+                    logging.error(f"Error: Could not read frame from camera {url}")
                     break
 
                 data = {
@@ -200,8 +205,7 @@ class Surveillance:
                         frame=frame,
                         camera_url=url,
                         path=os.path.join(
-                            path, 
-                            f"media/screenshots/suspends/{self.database.get_camera(url).get('id')}"
+                            f"media/screenshots/suspends/{self.database.get_camera(url).get('id')}",
                         ),
                     )
                     current_time = time.time()
@@ -222,13 +226,5 @@ if __name__ == "__main__":
     reconnect_cameras_thread.start()
     threading.Thread(
         target=face_trainer.process_camera_frames_parallel,
-        args=(database.get_camera_urls(),)
-        ).start()
-    import logging
-
-    try:
-        logging.basicConfig(level=logging.INFO)
-        server = WebSocketServer(addr=("0.0.0.0", 11222))
-        server.run()
-    except KeyboardInterrupt:
-        logging.info("Shutting down gracefully!")
+        args=(database.get_camera_urls(),),
+    ).start()

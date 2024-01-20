@@ -91,11 +91,20 @@ class CriminalsRecordsSerializer(serializers.ModelSerializer):
 
 
 class TempRecordsSerializer(serializers.ModelSerializer):
-    record = CriminalsRecordsSerializer()
+    criminal = CriminalsSerializer()
+    camera = CameraSerializer()
 
     class Meta:
         fields = "__all__"
         model = TempRecords
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+
+        # Move 'image_path' inside 'criminal' dictionary
+        representation["criminal"]["image_path"] = representation.pop("image_path")
+
+        return representation
 
 
 class TempClientLocationsSerializer(serializers.ModelSerializer):
@@ -117,6 +126,6 @@ class WebTempRecordsSerializer(serializers.ModelSerializer):
         return {
             "identity": representation["criminal"],
             "camera": representation["camera"],
-            "image": representation["image"],
+            "image": representation["image_path"],
             "date_created": representation["date_created"],
         }

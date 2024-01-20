@@ -1,5 +1,4 @@
 from websockets.exceptions import ConnectionClosedOK, ConnectionClosedError
-from urllib.parse import urlparse
 from dotenv import load_dotenv
 from datetime import datetime
 from models import Database
@@ -42,11 +41,13 @@ class WebSocketServer:
 
     async def communicate(self, input_client, key):
         base_path = os.path.join(os.getenv("BASE_DIR"), "media/screenshots/suspends")
-        
+
         while True:
             try:
                 logging.info(" Target client life: " + str(input_client.open))
-                logging.info(" Target client address: " + str(input_client.remote_address))
+                logging.info(
+                    " Target client address: " + str(input_client.remote_address)
+                )
                 logging.info(" Keeping alive: [%s]" % datetime.now())
                 logging.info(" Client addresses: " + str(self.clients))
 
@@ -55,7 +56,9 @@ class WebSocketServer:
                     folder_path = os.path.join(base_path, folder)
                     pk = folder_path.split("/")[-1]
                     # Get the latest image in each subfolder
-                    newest_image_path = os.path.join(sorted(os.listdir(folder_path))[-1])
+                    newest_image_path = os.path.join(
+                        sorted(os.listdir(folder_path))[-1]
+                    )
                     print("Newest image path: ", newest_image_path)
                     print("Folder Path: ", folder_path)
                     # Broadcast the information about the latest image
@@ -63,7 +66,8 @@ class WebSocketServer:
                         json.dumps(
                             {
                                 "image": str(
-                                    f"http://0.0.0.0:8000/media/screenshots/suspends/{pk}/" + newest_image_path,
+                                    f"http://0.0.0.0:8000/media/screenshots/suspends/{pk}/"
+                                    + newest_image_path,
                                 ),
                                 "date": str(datetime.now()),
                                 "camera": self.database.get_camera_by_id(pk=pk),
@@ -137,3 +141,10 @@ class WebSocketServer:
         logging.info(" Ctrl+c to get out of loop")
         asyncio.get_event_loop().run_until_complete(run_server)
         asyncio.get_event_loop().run_forever()
+
+if __name__ == "__main__":
+    try:
+        server = WebSocketServer(addr=("0.0.0.0", 11222))
+        server.run()
+    except KeyboardInterrupt:
+        logging.info("Shutting down gracefully!")
