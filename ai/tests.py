@@ -120,7 +120,10 @@ class Surveillance:
                     logging.info(f"file name: {filename}")
                     logging.info(f"Adding to database: {result}")
                     self.database.insert_records(
-                        image="http://0.0.0.0:8000/" + path + "/" + filename,
+                        image=f"http://{os.getenv('BASE_HOST')}:8000/"
+                        + path
+                        + "/"
+                        + filename,
                         criminal=result,
                         camera=self.database.get_camera(camera_index).get("id"),
                         date_recorded=datetime.now(),

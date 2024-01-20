@@ -10,11 +10,11 @@ import os
 
 
 load_dotenv()
+logging.basicConfig(level=logging.INFO)
 
 
 class WebSocketServer:
     def __init__(self, addr: tuple) -> None:
-        logging.basicConfig(level=logging.INFO)
         self.addr = addr
         self.database = Database()
         self.clients = dict()
@@ -66,7 +66,7 @@ class WebSocketServer:
                         json.dumps(
                             {
                                 "image": str(
-                                    f"http://0.0.0.0:8000/media/screenshots/suspends/{pk}/"
+                                    f"http://{os.getenv('BASE_HOST')}:8000:8000/media/screenshots/suspends/{pk}/"
                                     + newest_image_path,
                                 ),
                                 "date": str(datetime.now()),
@@ -143,8 +143,12 @@ class WebSocketServer:
         asyncio.get_event_loop().run_forever()
 
 if __name__ == "__main__":
+    print("Server starting")
     try:
         server = WebSocketServer(addr=("0.0.0.0", 11222))
+        print("Instantiated")
         server.run()
     except KeyboardInterrupt:
         logging.info("Shutting down gracefully!")
+
+# 192.168.1.252
