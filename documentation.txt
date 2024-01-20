@@ -9,3 +9,16 @@ and also first import torch and then import insightface otherwise goes back to C
 
 
 temporary token: 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l
+
+
+
+
+
+Frontend
+Backend django
+running on startup
+
+
+websocket
+ai 
+not running on startup

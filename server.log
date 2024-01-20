@@ -818,3 +818,256 @@ DETAIL:  Key (id)=(1) already exists.
 2024-01-20 06:34:48,982 - INFO - None
 2024-01-20 06:34:48,982 - INFO - None
 2024-01-20 11:34:51,830 - INFO - Camera: TempRecords object (208)
+2024-01-20 06:35:20,480 - INFO - Result: 1
+2024-01-20 06:35:20,480 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-35-20.jpg
+2024-01-20 06:35:20,480 - INFO - Frame existence: False
+2024-01-20 06:35:20,510 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:35:20,510 - INFO - file name: 2024-01-20:06-35-20.jpg
+2024-01-20 06:35:20,510 - INFO - Adding to database: 1
+2024-01-20 06:35:20,541 - INFO - None
+2024-01-20 06:35:20,541 - INFO - (147, 'http://192.168.1.252:8000/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-34-48.jpg', datetime.datetime(2024, 1, 20, 6, 34, 48, 961313, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=68400))), 1, 1)
+2024-01-20 11:35:21,898 - INFO - Camera: TempRecords object (209)
+2024-01-20 06:35:42,319 - INFO - Result: 1
+2024-01-20 06:35:42,319 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-35-42.jpg
+2024-01-20 06:35:42,319 - INFO - Frame existence: False
+2024-01-20 06:35:42,347 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:35:42,347 - INFO - file name: 2024-01-20:06-35-42.jpg
+2024-01-20 06:35:42,347 - INFO - Adding to database: 1
+2024-01-20 06:35:42,376 - INFO - None
+2024-01-20 06:35:42,376 - INFO - (147, 'http://192.168.1.252:8000/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-35-20.jpg', datetime.datetime(2024, 1, 20, 6, 35, 20, 518819, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=68400))), 1, 1)
+2024-01-20 11:35:46,723 - INFO - Camera: TempRecords object (210)
+2024-01-20 06:35:55,282 - INFO - Result: 1
+2024-01-20 06:35:55,282 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-35-55.jpg
+2024-01-20 06:35:55,282 - INFO - Frame existence: False
+2024-01-20 06:35:55,313 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:35:55,313 - INFO - file name: 2024-01-20:06-35-55.jpg
+2024-01-20 06:35:55,314 - INFO - Adding to database: 1
+2024-01-20 06:35:55,347 - INFO - None
+2024-01-20 06:35:55,347 - INFO - None
+2024-01-20 11:35:56,643 - INFO - Camera: TempRecords object (211)
+2024-01-20 06:36:13,972 - INFO - Result: 1
+2024-01-20 06:36:13,972 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-36-13.jpg
+2024-01-20 06:36:13,972 - INFO - Frame existence: False
+2024-01-20 06:36:14,001 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:36:14,001 - INFO - file name: 2024-01-20:06-36-13.jpg
+2024-01-20 06:36:14,001 - INFO - Adding to database: 1
+2024-01-20 06:36:14,032 - INFO - None
+2024-01-20 06:36:14,032 - INFO - (148, 'http://192.168.1.252:8000/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-35-55.jpg', datetime.datetime(2024, 1, 20, 6, 35, 55, 325118, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=68400))), 1, 1)
+2024-01-20 11:36:16,896 - INFO - Camera: TempRecords object (212)
+2024-01-20 06:36:35,063 - INFO - Result: 1
+2024-01-20 06:36:35,063 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-36-35.jpg
+2024-01-20 06:36:35,063 - INFO - Frame existence: False
+2024-01-20 06:36:35,092 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:36:35,092 - INFO - file name: 2024-01-20:06-36-35.jpg
+2024-01-20 06:36:35,092 - INFO - Adding to database: 1
+2024-01-20 06:36:35,123 - INFO - None
+2024-01-20 06:36:35,123 - INFO - (148, 'http://192.168.1.252:8000/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-36-13.jpg', datetime.datetime(2024, 1, 20, 6, 36, 14, 10103, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=68400))), 1, 1)
+2024-01-20 11:36:36,783 - INFO - Camera: TempRecords object (213)
+2024-01-20 06:36:59,983 - INFO - Result: 1
+2024-01-20 06:36:59,983 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-36-59.jpg
+2024-01-20 06:36:59,983 - INFO - Frame existence: False
+2024-01-20 06:37:00,014 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:37:00,014 - INFO - file name: 2024-01-20:06-36-59.jpg
+2024-01-20 06:37:00,014 - INFO - Adding to database: 1
+2024-01-20 06:37:00,037 - INFO - None
+2024-01-20 06:37:00,038 - INFO - None
+2024-01-20 11:37:06,989 - INFO - Camera: TempRecords object (214)
+2024-01-20 06:37:47,756 - INFO - Result: 1
+2024-01-20 06:37:47,756 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-37-47.jpg
+2024-01-20 06:37:47,756 - INFO - Frame existence: False
+2024-01-20 06:37:47,784 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:37:47,784 - INFO - file name: 2024-01-20:06-37-47.jpg
+2024-01-20 06:37:47,784 - INFO - Adding to database: 1
+2024-01-20 06:37:47,815 - INFO - None
+2024-01-20 06:37:47,816 - INFO - None
+2024-01-20 11:37:49,392 - INFO - Camera: TempRecords object (215)
+2024-01-20 06:38:39,684 - INFO - Result: 1
+2024-01-20 06:38:39,684 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-38-39.jpg
+2024-01-20 06:38:39,684 - INFO - Frame existence: False
+2024-01-20 06:38:39,716 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:38:39,716 - INFO - file name: 2024-01-20:06-38-39.jpg
+2024-01-20 06:38:39,716 - INFO - Adding to database: 1
+2024-01-20 06:38:39,746 - INFO - None
+2024-01-20 06:38:39,746 - INFO - (150, 'http://192.168.1.252:8000/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-37-47.jpg', datetime.datetime(2024, 1, 20, 6, 37, 47, 792987, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=68400))), 1, 1)
+2024-01-20 11:38:44,581 - INFO - Camera: TempRecords object (216)
+2024-01-20 06:38:49,744 - INFO - Result: 1
+2024-01-20 06:38:49,744 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-38-49.jpg
+2024-01-20 06:38:49,744 - INFO - Frame existence: False
+2024-01-20 06:38:49,773 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:38:49,773 - INFO - file name: 2024-01-20:06-38-49.jpg
+2024-01-20 06:38:49,773 - INFO - Adding to database: 1
+2024-01-20 06:38:49,801 - INFO - None
+2024-01-20 06:38:49,801 - INFO - None
+2024-01-20 11:38:54,621 - INFO - Camera: TempRecords object (217)
+2024-01-20 11:39:11,685 - WARNING - Not Found: /media/screenshots/criminals/1/2024/01/20/2024-01-20:05-19-26.jpg
+2024-01-20 06:39:12,961 - INFO - Result: 1
+2024-01-20 06:39:12,961 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-39-12.jpg
+2024-01-20 06:39:12,961 - INFO - Frame existence: False
+2024-01-20 06:39:12,994 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:39:12,994 - INFO - file name: 2024-01-20:06-39-12.jpg
+2024-01-20 06:39:12,994 - INFO - Adding to database: 1
+2024-01-20 06:39:13,023 - INFO - None
+2024-01-20 06:39:13,024 - INFO - (151, 'http://192.168.1.252:8000/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-38-49.jpg', datetime.datetime(2024, 1, 20, 6, 38, 49, 781133, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=68400))), 1, 1)
+2024-01-20 11:39:14,488 - INFO - Camera: TempRecords object (218)
+2024-01-20 06:39:33,242 - INFO - Result: 1
+2024-01-20 06:39:33,242 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-39-33.jpg
+2024-01-20 06:39:33,242 - INFO - Frame existence: False
+2024-01-20 06:39:33,270 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:39:33,270 - INFO - file name: 2024-01-20:06-39-33.jpg
+2024-01-20 06:39:33,270 - INFO - Adding to database: 1
+2024-01-20 06:39:33,300 - INFO - None
+2024-01-20 06:39:33,301 - INFO - (151, 'http://192.168.1.252:8000/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-39-12.jpg', datetime.datetime(2024, 1, 20, 6, 39, 13, 2521, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=68400))), 1, 1)
+2024-01-20 11:39:34,650 - INFO - Camera: TempRecords object (219)
+2024-01-20 06:39:45,538 - INFO - Result: 1
+2024-01-20 06:39:45,538 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-39-45.jpg
+2024-01-20 06:39:45,538 - INFO - Frame existence: False
+2024-01-20 06:39:45,566 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:39:45,566 - INFO - file name: 2024-01-20:06-39-45.jpg
+2024-01-20 06:39:45,566 - INFO - Adding to database: 1
+2024-01-20 06:39:45,593 - INFO - None
+2024-01-20 06:39:45,593 - INFO - (151, 'http://192.168.1.252:8000/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-39-33.jpg', datetime.datetime(2024, 1, 20, 6, 39, 33, 281093, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=68400))), 1, 1)
+2024-01-20 11:39:49,675 - INFO - Camera: TempRecords object (220)
+2024-01-20 06:40:31,004 - INFO - Connected to camera url: rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch41/main/av_stream
+2024-01-20 06:40:31,004 - INFO - Connected to camera: rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch41/main/av_stream
+2024-01-20 06:40:32,464 - INFO - Connected to camera url: http://192.168.1.252:8000/stream/?url=rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch39/main/av_stream
+2024-01-20 06:40:32,464 - INFO - Connected to camera: http://192.168.1.252:8000/stream/?url=rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch39/main/av_stream
+2024-01-20 06:40:37,799 - INFO - Result: 1
+2024-01-20 06:40:37,799 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-40-37.jpg
+2024-01-20 06:40:37,799 - INFO - Frame existence: False
+2024-01-20 06:40:37,831 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:40:37,831 - INFO - file name: 2024-01-20:06-40-37.jpg
+2024-01-20 06:40:37,831 - INFO - Adding to database: 1
+2024-01-20 06:40:37,861 - INFO - None
+2024-01-20 06:40:37,862 - INFO - None
+2024-01-20 11:40:38,246 - INFO - Camera: TempRecords object (221)
+2024-01-20 11:40:43,107 - WARNING - Not Found: /media/screenshots/criminals/1/2024/01/20/2024-01-20:05-19-26.jpg
+2024-01-20 06:40:49,153 - INFO - Result: 1
+2024-01-20 06:40:49,153 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-40-49.jpg
+2024-01-20 06:40:49,153 - INFO - Frame existence: False
+2024-01-20 06:40:49,185 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:40:49,185 - INFO - file name: 2024-01-20:06-40-49.jpg
+2024-01-20 06:40:49,185 - INFO - Adding to database: 1
+2024-01-20 06:40:49,213 - INFO - None
+2024-01-20 06:40:49,213 - INFO - None
+2024-01-20 11:40:53,268 - INFO - Camera: TempRecords object (222)
+2024-01-20 06:41:04,627 - INFO - Result: 1
+2024-01-20 06:41:04,627 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-41-04.jpg
+2024-01-20 06:41:04,627 - INFO - Frame existence: False
+2024-01-20 06:41:04,657 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:41:04,657 - INFO - file name: 2024-01-20:06-41-04.jpg
+2024-01-20 06:41:04,657 - INFO - Adding to database: 1
+2024-01-20 06:41:04,685 - INFO - None
+2024-01-20 06:41:04,686 - INFO - None
+2024-01-20 11:41:08,208 - INFO - Camera: TempRecords object (223)
+2024-01-20 06:41:12,776 - ERROR - Error processing camera http://192.168.1.252:8000/stream/?url=rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch39/main/av_stream: list index out of range
+2024-01-20 06:41:25,094 - INFO - Connected to camera url: rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch41/main/av_stream
+2024-01-20 06:41:25,094 - INFO - Connected to camera: rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch41/main/av_stream
+2024-01-20 06:41:43,987 - INFO - Result: 1
+2024-01-20 06:41:43,987 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-41-43.jpg
+2024-01-20 06:41:43,987 - INFO - Frame existence: False
+2024-01-20 06:41:44,016 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:41:44,016 - INFO - file name: 2024-01-20:06-41-43.jpg
+2024-01-20 06:41:44,016 - INFO - Adding to database: 1
+2024-01-20 06:41:44,044 - INFO - None
+2024-01-20 06:41:44,044 - INFO - None
+2024-01-20 11:41:47,422 - INFO - Camera: TempRecords object (224)
+2024-01-20 06:41:56,674 - INFO - Result: 1
+2024-01-20 06:41:56,674 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-41-56.jpg
+2024-01-20 06:41:56,674 - INFO - Frame existence: False
+2024-01-20 06:41:56,702 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:41:56,702 - INFO - file name: 2024-01-20:06-41-56.jpg
+2024-01-20 06:41:56,702 - INFO - Adding to database: 1
+2024-01-20 06:41:56,730 - INFO - None
+2024-01-20 06:41:56,731 - INFO - (155, 'http://192.168.1.252:8000/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-41-43.jpg', datetime.datetime(2024, 1, 20, 6, 41, 44, 25088, tzinfo=datetime.timezone(datetime.timedelta(days=-1, seconds=68400))), 1, 1)
+2024-01-20 11:41:57,456 - INFO - Camera: TempRecords object (225)
+2024-01-20 06:42:25,028 - INFO - Connected to camera url: rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch39/main/av_stream
+2024-01-20 06:42:25,028 - INFO - Connected to camera: rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch39/main/av_stream
+2024-01-20 06:42:27,212 - INFO - Result: 1
+2024-01-20 06:42:27,212 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-42-27.jpg
+2024-01-20 06:42:27,212 - INFO - Frame existence: False
+2024-01-20 06:42:27,248 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:42:27,248 - INFO - file name: 2024-01-20:06-42-27.jpg
+2024-01-20 06:42:27,248 - INFO - Adding to database: 1
+2024-01-20 06:42:27,278 - INFO - None
+2024-01-20 06:42:27,278 - INFO - None
+2024-01-20 11:42:27,461 - INFO - Camera: TempRecords object (226)
+2024-01-20 06:43:00,351 - ERROR - Error processing camera rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch39/main/av_stream: list index out of range
+2024-01-20 06:43:01,266 - ERROR - Error processing camera rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch41/main/av_stream: list index out of range
+2024-01-20 11:48:50,558 - DEBUG - Importing BlpImagePlugin
+2024-01-20 11:48:50,558 - DEBUG - Importing BmpImagePlugin
+2024-01-20 11:48:50,558 - DEBUG - Importing BufrStubImagePlugin
+2024-01-20 11:48:50,558 - DEBUG - Importing CurImagePlugin
+2024-01-20 11:48:50,558 - DEBUG - Importing DcxImagePlugin
+2024-01-20 11:48:50,558 - DEBUG - Importing DdsImagePlugin
+2024-01-20 11:48:50,558 - DEBUG - Importing EpsImagePlugin
+2024-01-20 11:48:50,559 - DEBUG - Importing FitsStubImagePlugin
+2024-01-20 11:48:50,559 - DEBUG - Importing FliImagePlugin
+2024-01-20 11:48:50,559 - DEBUG - Importing FpxImagePlugin
+2024-01-20 11:48:50,559 - DEBUG - Importing FtexImagePlugin
+2024-01-20 11:48:50,559 - DEBUG - Importing GbrImagePlugin
+2024-01-20 11:48:50,559 - DEBUG - Importing GifImagePlugin
+2024-01-20 11:48:50,559 - DEBUG - Importing GribStubImagePlugin
+2024-01-20 11:48:50,560 - DEBUG - Importing Hdf5StubImagePlugin
+2024-01-20 11:48:50,560 - DEBUG - Importing IcnsImagePlugin
+2024-01-20 11:48:50,560 - DEBUG - Importing IcoImagePlugin
+2024-01-20 11:48:50,560 - DEBUG - Importing ImImagePlugin
+2024-01-20 11:48:50,560 - DEBUG - Importing ImtImagePlugin
+2024-01-20 11:48:50,560 - DEBUG - Importing IptcImagePlugin
+2024-01-20 11:48:50,560 - DEBUG - Importing JpegImagePlugin
+2024-01-20 11:48:50,560 - DEBUG - Importing Jpeg2KImagePlugin
+2024-01-20 11:48:50,560 - DEBUG - Importing McIdasImagePlugin
+2024-01-20 11:48:50,561 - DEBUG - Importing MicImagePlugin
+2024-01-20 11:48:50,561 - DEBUG - Importing MpegImagePlugin
+2024-01-20 11:48:50,561 - DEBUG - Importing MpoImagePlugin
+2024-01-20 11:48:50,561 - DEBUG - Importing MspImagePlugin
+2024-01-20 11:48:50,561 - DEBUG - Importing PalmImagePlugin
+2024-01-20 11:48:50,561 - DEBUG - Importing PcdImagePlugin
+2024-01-20 11:48:50,561 - DEBUG - Importing PcxImagePlugin
+2024-01-20 11:48:50,561 - DEBUG - Importing PdfImagePlugin
+2024-01-20 11:48:50,563 - DEBUG - Importing PixarImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing PngImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing PpmImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing PsdImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing SgiImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing SpiderImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing SunImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing TgaImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing TiffImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing WebPImagePlugin
+2024-01-20 11:48:50,564 - DEBUG - Importing WmfImagePlugin
+2024-01-20 11:48:50,565 - DEBUG - Importing XbmImagePlugin
+2024-01-20 11:48:50,565 - DEBUG - Importing XpmImagePlugin
+2024-01-20 11:48:50,565 - DEBUG - Importing XVThumbImagePlugin
+2024-01-20 06:49:21,808 - INFO - Connected to camera url: rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch41/main/av_stream
+2024-01-20 06:49:21,808 - INFO - Connected to camera: rtsp://admin:p@rolo12345@192.168.254.201:554/h264/ch41/main/av_stream
+2024-01-20 06:49:29,412 - INFO - Result: 1
+2024-01-20 06:49:29,412 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-49-29.jpg
+2024-01-20 06:49:29,412 - INFO - Frame existence: False
+2024-01-20 06:49:29,440 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:49:29,440 - INFO - file name: 2024-01-20:06-49-29.jpg
+2024-01-20 06:49:29,440 - INFO - Adding to database: 1
+2024-01-20 06:49:29,467 - INFO - None
+2024-01-20 06:49:29,467 - INFO - None
+2024-01-20 11:49:32,383 - INFO - Camera: TempRecords object (227)
+2024-01-20 11:49:39,305 - WARNING - Not Found: /media/screenshots/criminals/1/2024/01/20/2024-01-20:05-19-26.jpg
+2024-01-20 11:49:39,307 - WARNING - Not Found: /media/screenshots/criminals/1/2024/01/20/2024-01-20:05-19-26.jpg
+2024-01-20 06:49:39,432 - INFO - Result: 1
+2024-01-20 06:49:39,433 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-49-39.jpg
+2024-01-20 06:49:39,433 - INFO - Frame existence: False
+2024-01-20 06:49:39,461 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:49:39,461 - INFO - file name: 2024-01-20:06-49-39.jpg
+2024-01-20 06:49:39,461 - INFO - Adding to database: 1
+2024-01-20 06:49:39,488 - INFO - None
+2024-01-20 06:49:39,488 - INFO - None
+2024-01-20 11:49:42,373 - INFO - Camera: TempRecords object (228)
+2024-01-20 11:49:48,805 - WARNING - Not Found: /media/screenshots/criminals/1/2024/01/20/2024-01-20:05-19-26.jpg
+2024-01-20 11:49:48,808 - WARNING - Not Found: /media/screenshots/criminals/1/2024/01/20/2024-01-20:05-19-26.jpg
+2024-01-20 06:50:12,974 - INFO - Result: 1
+2024-01-20 06:50:12,974 - INFO - Full path: /home/ubuntu/project/BazaarSurveillance/media/screenshots/criminals/1/2024/01/20/2024-01-20:06-50-12.jpg
+2024-01-20 06:50:12,975 - INFO - Frame existence: False
+2024-01-20 06:50:13,003 - INFO - Path of image: media/screenshots/criminals/1/2024/01/20
+2024-01-20 06:50:13,003 - INFO - file name: 2024-01-20:06-50-12.jpg
+2024-01-20 06:50:13,003 - INFO - Adding to database: 1
+2024-01-20 06:50:13,034 - INFO - None
+2024-01-20 06:50:13,034 - INFO - None
+2024-01-20 11:50:17,356 - INFO - Camera: TempRecords object (229)
