@@ -134,8 +134,8 @@ class Surveillance:
                         )
 
     def save_screenshot(self, frame, save_path):
-        if not os.path.exists(save_path):
-            os.makedirs(save_path)
+        if not os.path.exists(os.path.join(os.getenv("BASE_DIR"), save_path)):
+            os.makedirs(os.path.join(os.getenv("BASE_DIR"), save_path))
 
         timestamp = time.strftime("%Y-%m-%d:%H-%M-%S")
         filename = f"{timestamp}.jpg"
@@ -193,7 +193,7 @@ class Surveillance:
             else:
                 logging.info("Connected to camera: " + url)
 
-            current_time = time.time()
+            # current_time = time.time()
             while not self.exit_event.is_set():
                 ret, frame = camera.read()
                 if not ret:
@@ -206,15 +206,18 @@ class Surveillance:
                     "last_detection_time": self.last_detection_time,
                 }
                 self.process_frame(data)
-                if (time.time() - current_time) > 5:
-                    save_screenshot(
-                        frame=frame,
-                        camera_url=url,
-                        path=os.path.join(
-                            f"media/screenshots/suspends/{self.database.get_camera(url).get('id')}",
-                        ),
-                    )
-                    current_time = time.time()
+                # if (time.time() - current_time) > 5:
+                #     logging.info(f"Taking interval screenshot for camera: {url}")
+                #     full_path = self.save_screenshot(
+                #         frame=frame,
+                #         save_path=os.path.join(
+                #             f"media/screenshots/suspends/{self.database.get_camera(url).get('id')}",
+                #         ),
+                #     )
+                #     logging.info(
+                #         f"Full path of the interval screenshot image: {full_path}"
+                #     )
+                #     current_time = time.time()
             camera.release()
             time.sleep(1)
 

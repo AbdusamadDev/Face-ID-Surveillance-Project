@@ -163,7 +163,10 @@ class BaseScreenshotsAPIView(APIView):
 
         for root, _, files in os.walk(path):
             response_list.extend(
-                [host_address + str(os.path.join(root, file))[1:] for file in files]
+                [
+                    os.getenv("BASE_HOST") + ":8000" + str(os.path.join(root, file))[1:]
+                    for file in files
+                ]
             )
 
         total_images = len(response_list)
@@ -313,6 +316,7 @@ class AndroidRequestHandlerAPIView(ModelViewSet):
                 float(nearest_location.get("latitude")) == float(latitude)
             ):
                 TempRecords.objects.all().delete()
+                logging.info(f"Returning object: {query.pk}")
                 return Response(TempRecordsSerializer(query).data)
             else:
                 return Response({})

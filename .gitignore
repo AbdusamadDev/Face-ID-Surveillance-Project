@@ -5,5 +5,4 @@ ai/faiss
 api/__pycache__
 ai/__pycache__
 config/__pycache__
-media/screenshots/suspends/
-media/screenshots/criminals/
+media

@@ -85,8 +85,7 @@ class WebSocketServer:
                 continue
             except Exception as error:
                 logging.error(str(error))
-                await self.connect(input_client)
-                continue
+                break
 
     async def handle_server(self, websocket, path):
         while True:
